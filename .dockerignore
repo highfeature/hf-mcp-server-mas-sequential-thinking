@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git
+.vscode
+.idea
+*.log
+*.sqlite3
+*.db
+*.sqlite
+*.sqlite-journal

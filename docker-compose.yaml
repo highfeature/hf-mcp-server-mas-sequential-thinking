@@ -1,0 +1,19 @@
+---
+
+services:
+  hf-mcp-server-mas-sequential-thinking:
+    # image: hf-mcp-server-mas-sequential-thinking:latest
+    build: .
+    ports:
+      - "19110:8000"
+    env_file:
+      - .env
+    volumes:
+      - /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://0.0.0.0:8000/docs || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

@@ -144,7 +144,7 @@ npx -y @smithery/cli install @FradSer/mcp-server-mas-sequential-thinking --clien
     # OPENROUTER_AGENT_MODEL_ID="deepseek/deepseek-chat" # Example, adjust as needed
 
     # --- External Tools ---
-    # Required ONLY if the Researcher agent is used and needs Exa
+    # Required ONLY if the Researcher agent use EXA API
     EXA_API_KEY="your_exa_api_key"
     ```
 
@@ -304,14 +304,43 @@ The tool returns a JSON string containing:
     ```
 
 5.  **Testing the Application:**
-6.  Testing: Test your MCP server locally before deploying using MCP Inspector. Please ensure your Dockerfile builds locally first before deploying.
-7.  ```bash
-    npx @modelcontextprotocol/inspector uv run main.py
+    Testing: Test your MCP server locally before deploying using MCP Inspector. Please ensure your Dockerfile builds locally first before deploying.
+    ```bash
+        npx @modelcontextprotocol/inspector uv run main.py
+        ```
+        Open the url http://127.0.0.1:6274/, then click on the "Run" button to test your MCP server locally. Then click on the "Tools" button to see the tools that are available in the MCP server, and verify that the tool "sequentialthinking" is available.
+        Copy "I need to test hf-mcp-server-mas-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
+        The model should return a response with a new thought, a new thought number, a new total thoughts, and Tool Result: Success. If you see this, your MCP server is working correctly.
+
+5. 1 **WIP: Docker and Docker Compose, all with sse support for support kubernetes**
+       <!-- ```sh
+    docker build -t mcp-server-mas-sequential-thinking .
     ```
-    Open the url http://127.0.0.1:6274/, then click on the "Run" button to test your MCP server locally. Then click on the "Tools" button to see the tools that are available in the MCP server, and verify that the tool "sequentialthinking" is available.
-    Copy "I need to test hf-mcp-server-mas-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
-    The model should return a response with a new thought, a new thought number, a new total thoughts, and Tool Result: Success. If you see this, your MCP server is working correctly.
-8.  **Contribution:**
+    Make sure you have a .env file in the root of your project with the necessary environment variables.
+    ```.env
+    LLM_PROVIDER=Ollama
+    LLM_MODEL=the_model_name
+    EXA_API_KEY=your-exa-api-key
+    ```
+    Then run the following command to test everything is fine
+    ```sh
+    docker run -i --rm --env-file .env mcp-server-mas-sequential-thinking:latest
+    ```
+    Then
+    ```sh
+    docker compose up -d
+    ``` -->
+    To run the project using Docker compose, follow these steps:
+    ```sh
+    mkdir -p /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking
+    ln -s /home/a/.sequential_thinking/logs /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/logs
+    cp pyproject.toml /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/
+    cp main.py /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/
+    cp .env /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/
+    docker compose up --build
+    ```
+    
+6.  **Contribution:**
     (Consider adding contribution guidelines: branching strategy, pull request process, code style).
 
 ## License
@@ -320,6 +349,11 @@ MIT
 
 ## Release Notes
 
+### 0.4.0
+    - Added support for DuckDuckGoTools in Researcher agents, to make a web search Without API key. 
+    - Updated dependencies
+
 ### 0.3.0
     - Added support for Ollama FULL LOCAL (no API key needed, but requires Ollama installed and running locally)
     - Updated dependencies
+  

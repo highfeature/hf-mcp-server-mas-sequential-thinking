@@ -12,6 +12,7 @@ from agno.models.groq import Groq
 from agno.models.ollama import Ollama
 from agno.models.openrouter import OpenRouter
 from agno.team.team import Team
+from agno.tools.duckduckgo import DuckDuckGoTools
 from agno.tools.exa import ExaTools
 from agno.tools.thinking import ThinkingTools
 from dotenv import load_dotenv
@@ -307,7 +308,7 @@ def get_model_config() -> tuple[Type[Model], str, str]:
     return ModelClass, team_model_id, agent_model_id
 
 
-def create_sequential_thinking_team() -> Team:
+def create_sequential_thinking_team(web_parser_name: str) -> Team:
     """
     Creates and configures the Agno multi-agent team for sequential thinking,
     using 'coordinate' mode. The Team object itself acts as the coordinator.
@@ -352,12 +353,15 @@ def create_sequential_thinking_team() -> Team:
         markdown=True
     )
 
-    researcher = Agent(
-        name="Researcher",
-        role="Information Gatherer",
-        description="Gathers and validates information based on delegated research sub-tasks.",
-        tools=[ThinkingTools(), ExaTools()],
-        instructions=[
+    researcher_config = {
+        "name": "Researcher",
+        "role": "Information Gatherer",
+        "description": "Gathers and validates information based on delegated research sub-tasks.",
+        "tools": [
+            ThinkingTools(), 
+            ExaTools() if web_parser_name == "ExaTools" else DuckDuckGoTools()
+        ],
+        "instructions":[
             "You are the Information Gatherer specialist.",
             "You will receive specific sub-tasks from the Team Coordinator requiring information gathering or verification.",
             "**When you receive a sub-task:**",
@@ -370,10 +374,11 @@ def create_sequential_thinking_team() -> Team:
             " 7. Return your response to the Team Coordinator.",
             "Focus on accuracy and relevance for the delegated research request.",
         ],
-        model=agent_model_instance, # Use the designated agent model
-        add_datetime_to_instructions=True,
-        markdown=True
-    )
+        "model": agent_model_instance, # Use the designated agent model
+        "add_datetime_to_instructions": True,
+        "markdown": True
+    }
+    researcher = Agent(**researcher_config)
 
     analyzer = Agent(
         name="Analyzer",
@@ -806,7 +811,7 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
 
 # --- Main Execution ---
 
-def run():
+def run(web_parser_name: str="ExaTools"):
     """Initializes and runs the MCP server in coordinate mode."""
     selected_provider = os.environ.get("LLM_PROVIDER", "deepseek").lower()
     logger.info(f"Using provider: {selected_provider}")
@@ -819,7 +824,7 @@ def run():
     if not app_context: # Check if context already exists (e.g., from lifespan manager)
         logger.info("Initializing application resources directly (Coordinate Mode)...")
         try:
-             team = create_sequential_thinking_team()
+             team = create_sequential_thinking_team(web_parser_name)
              app_context = AppContext(team=team)
              logger.info(f"Agno team initialized directly in coordinate mode using provider: {selected_provider}.")
         except Exception as e:
@@ -855,19 +860,24 @@ def check_environment_variables():
     try:
         ModelClass, _, _ = get_model_config() # Just need the class for dummy init
         dummy_model = ModelClass(id="dummy-check") # Use a placeholder ID
-        researcher_for_check = Agent(name="CheckAgent", tools=[ExaTools()], model=dummy_model)
+        researcher_for_check = Agent(name="CheckAgent", tools=[DuckDuckGoTools(),ExaTools()], model=dummy_model)
+        uses_ddg = any(isinstance(t, DuckDuckGoTools) for t in researcher_for_check.tools)
         uses_exa = any(isinstance(t, ExaTools) for t in researcher_for_check.tools)
 
-        if uses_exa and "EXA_API_KEY" not in os.environ:
-             logger.warning("EXA_API_KEY environment variable not found, but ExaTools are configured in a team member. Researcher agent might fail.")
+        if uses_exa and "EXA_API_KEY" in os.environ:
+            logger.info("EXA_API_KEY environment variable found. ExaTools will be used in Researcher agents.")
+            return "use_exa"
+
+        logger.warning("DDG_API_KEY environment variable found. DuckDuckGoTools will be used in Researcher agents.")
+        return "use_ddg"
     except Exception as e:
         logger.error(f"Could not perform ExaTools check due to an error: {e}")
 
 
 if __name__ == "__main__":
-    check_environment_variables()
+    web_parser_name = check_environment_variables()
     try:
-        run()
+        run(web_parser_name)
     except Exception as e:
         logger.critical(f"Failed during server run: {e}", exc_info=True)
         sys.exit(1)
