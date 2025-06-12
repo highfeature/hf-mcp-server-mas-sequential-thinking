@@ -84,7 +84,7 @@
       "mas-sequential-thinking": {
       "command": "uvx", // 或 "python", "path/to/venv/bin/python" 等
       "args": [
-        "hf-mcp-server-mas-sequential-thinking" // 或指向主脚本的路径, 例如 "main.py"
+        "hf-mcp-mas-sequential-thinking" // 或指向主脚本的路径, 例如 "main.py"
       ],
       "env": {
         "LLM_PROVIDER": "ollama", // 或 "groq", "openrouter"
@@ -103,8 +103,8 @@
 
 1.  **克隆仓库：**
     ```bash
-    git clone git@github.com:FradSer/hf-mcp-server-mas-sequential-thinking.git
-    cd hf-mcp-server-mas-sequential-thinking
+    git clone git@github.com:FradSer/hf-mcp-mas-sequential-thinking.git
+    cd hf-mcp-mas-sequential-thinking
     ```
 
 2.  **设置环境变量：**
@@ -182,7 +182,7 @@
 
 1.  **使用 `uv run` (推荐使用):**
     ```bash
-    uv --directory /path/to/hf-mcp-server-mas-sequential-thinking run hf-mcp-server-mas-sequential-thinking
+    uv --directory /path/to/hf-mcp-mas-sequential-thinking run hf-mcp-mas-sequential-thinking
     ```
 2.  **直接使用 Python:**
 
@@ -265,8 +265,8 @@ LLM 会迭代地与此工具交互：
 
 1.  **克隆仓库：** (同安装部分)
     ```bash
-    git clone git@github.com:FradSer/hf-mcp-server-mas-sequential-thinking.git
-    cd hf-mcp-server-mas-sequential-thinking
+    git clone git@github.com:FradSer/hf-mcp-mas-sequential-thinking.git
+    cd hf-mcp-mas-sequential-thinking
     ```
 2.  **设置虚拟环境：** (推荐)
     ```bash

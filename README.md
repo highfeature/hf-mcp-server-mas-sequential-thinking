@@ -309,7 +309,7 @@ The tool returns a JSON string containing:
         npx @modelcontextprotocol/inspector uv run main.py
         ```
         Open the url http://127.0.0.1:6274/, then click on the "Run" button to test your MCP server locally. Then click on the "Tools" button to see the tools that are available in the MCP server, and verify that the tool "sequentialthinking" is available.
-        Copy "I need to test hf-mcp-server-mas-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
+        Copy "I need to test hf-mcp-mas-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
         The model should return a response with a new thought, a new thought number, a new total thoughts, and Tool Result: Success. If you see this, your MCP server is working correctly.
 
 5. 1 **WIP: Docker and Docker Compose, all with sse support for support kubernetes**
@@ -332,11 +332,11 @@ The tool returns a JSON string containing:
     ``` -->
     To run the project using Docker compose, follow these steps:
     ```sh
-    mkdir -p /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking
-    ln -s /home/a/.sequential_thinking/logs /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/logs
-    cp pyproject.toml /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/
-    cp main.py /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/
-    cp .env /home/a/docker-data/MCP/hf-mcp-server-mas-sequential-thinking/
+    mkdir -p /home/a/docker-data/MCP/hf-mcp-mas-sequential-thinking
+    ln -s /home/a/.sequential_thinking/logs /home/a/docker-data/MCP/hf-mcp-mas-sequential-thinking/logs
+    cp pyproject.toml /home/a/docker-data/MCP/hf-mcp-mas-sequential-thinking/
+    cp main.py /home/a/docker-data/MCP/hf-mcp-mas-sequential-thinking/
+    cp .env /home/a/docker-data/MCP/hf-mcp-mas-sequential-thinking/
     docker compose up --build
     ```
     

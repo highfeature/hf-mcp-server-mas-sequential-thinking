@@ -296,8 +296,8 @@ def get_model_config() -> tuple[Type[Model], str, str]:
         logger.info(f"Using OpenRouter: Team Model='{team_model_id}', Agent Model='{agent_model_id}'")
     elif provider.lower() == "ollama":
         ModelClass = Ollama
-        team_model_id = os.environ.get("OLLAMA_TEAM_MODEL_ID", "devstral:24b")
-        agent_model_id = os.environ.get("OLLAMA_AGENT_MODEL_ID", "devstral:24b")
+        team_model_id = os.environ.get("OLLAMA_TEAM_MODEL_ID", "hf-tool-thinking-qween3-14b-32k:latest")
+        agent_model_id = os.environ.get("OLLAMA_AGENT_MODEL_ID", "hf-tool-thinking-qween3-14b-32k:latest")
         logger.info(f"Using Ollama: Team Model='{team_model_id}', Agent Model='{agent_model_id}'")
     else:
         logger.error(f"Unsupported LLM_PROVIDER: {provider}. Defaulting to Ollama.")
@@ -562,30 +562,30 @@ def sequential_thinking_prompt(problem: str, context: str = ""):
 
     user_prompt_text = f"""Initiate a comprehensive sequential thinking process for the following problem:
 
-Problem: {problem}
-{f'Context: {context}' if context else ''}"""
+    Problem: {problem}
+    {f'Context: {context}' if context else ''}"""
 
     assistant_guidelines = f"""Okay, let's start the sequential thinking process. Here are the guidelines and the process we'll follow using the 'coordinate' mode team:
 
-**Sequential Thinking Goals & Guidelines (Coordinate Mode):**
+    **Sequential Thinking Goals & Guidelines (Coordinate Mode):**
 
-1.  **Estimate Steps:** Analyze the problem complexity. Your initial `totalThoughts` estimate should be at least {min_thoughts}.
-2.  **First Thought:** Call the 'sequentialthinking' tool with `thoughtNumber: 1`, your estimated `totalThoughts` (at least {min_thoughts}), and `nextThoughtNeeded: True`. Structure your first thought as: "Plan a comprehensive analysis approach for: {problem}"
-3.  **Encouraged Revision:** Actively look for opportunities to revise previous thoughts if you identify flaws, oversights, or necessary refinements based on later analysis (especially from the Coordinator synthesizing Critic/Analyzer outputs). Use `isRevision: True` and `revisesThought: <thought_number>` when performing a revision. Robust thinking often involves self-correction. Look for 'RECOMMENDATION: Revise thought #X...' in the Coordinator's response.
-4.  **Encouraged Branching:** Explore alternative paths, perspectives, or solutions where appropriate. Use `branchFromThought: <thought_number>` and `branchId: <unique_branch_name>` to initiate branches. Exploring alternatives is key to thorough analysis. Consider suggestions for branching proposed by the Coordinator (e.g., 'SUGGESTION: Consider branching...').
-5.  **Extension:** If the analysis requires more steps than initially estimated, use `needsMoreThoughts: True` on the thought *before* you need the extension.
-6.  **Thought Content:** Each thought must:
-    *   Be detailed and specific to the current stage (planning, analysis, critique, synthesis, revision, branching).
-    *   Clearly explain the *reasoning* behind the thought, especially for revisions and branches.
-    *   Conclude by outlining what the *next* thought needs to address to fulfill the overall plan, considering the Coordinator's synthesis and suggestions.
+    1.  **Estimate Steps:** Analyze the problem complexity. Your initial `totalThoughts` estimate should be at least {min_thoughts}.
+    2.  **First Thought:** Call the 'sequentialthinking' tool with `thoughtNumber: 1`, your estimated `totalThoughts` (at least {min_thoughts}), and `nextThoughtNeeded: True`. Structure your first thought as: "Plan a comprehensive analysis approach for: {problem}"
+    3.  **Encouraged Revision:** Actively look for opportunities to revise previous thoughts if you identify flaws, oversights, or necessary refinements based on later analysis (especially from the Coordinator synthesizing Critic/Analyzer outputs). Use `isRevision: True` and `revisesThought: <thought_number>` when performing a revision. Robust thinking often involves self-correction. Look for 'RECOMMENDATION: Revise thought #X...' in the Coordinator's response.
+    4.  **Encouraged Branching:** Explore alternative paths, perspectives, or solutions where appropriate. Use `branchFromThought: <thought_number>` and `branchId: <unique_branch_name>` to initiate branches. Exploring alternatives is key to thorough analysis. Consider suggestions for branching proposed by the Coordinator (e.g., 'SUGGESTION: Consider branching...').
+    5.  **Extension:** If the analysis requires more steps than initially estimated, use `needsMoreThoughts: True` on the thought *before* you need the extension.
+    6.  **Thought Content:** Each thought must:
+        *   Be detailed and specific to the current stage (planning, analysis, critique, synthesis, revision, branching).
+        *   Clearly explain the *reasoning* behind the thought, especially for revisions and branches.
+        *   Conclude by outlining what the *next* thought needs to address to fulfill the overall plan, considering the Coordinator's synthesis and suggestions.
 
-**Process:**
+    **Process:**
 
-*   The `sequentialthinking` tool will track your progress. The Agno team operates in 'coordinate' mode. The Coordinator agent receives your thought, delegates sub-tasks to specialists (like Analyzer, Critic), and synthesizes their outputs, potentially including recommendations for revision or branching.
-*   Focus on insightful analysis, constructive critique (leading to potential revisions), and creative exploration (leading to potential branching).
-*   Actively reflect on the process. Linear thinking might be insufficient for complex problems.
+    *   The `sequentialthinking` tool will track your progress. The Agno team operates in 'coordinate' mode. The Coordinator agent receives your thought, delegates sub-tasks to specialists (like Analyzer, Critic), and synthesizes their outputs, potentially including recommendations for revision or branching.
+    *   Focus on insightful analysis, constructive critique (leading to potential revisions), and creative exploration (leading to potential branching).
+    *   Actively reflect on the process. Linear thinking might be insufficient for complex problems.
 
-Proceed with the first thought based on these guidelines."""
+    Proceed with the first thought based on these guidelines."""
 
     return [
         {

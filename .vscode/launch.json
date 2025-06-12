@@ -11,13 +11,13 @@
             "program": "main.py",
             "console": "integratedTerminal",
             // "args": "${command:pickArgs}"
-            "env": {
-                "LLM_PROVIDER": "Ollama",
-                "LLM_MODEL": "devstral:24b",
-                "LLM_BASE_URL": "http://localhost:11434",
-                "LLM_TEMPERATURE": "0.0",
-                "EXA_API_KEY": "4b009399-5ab5-487b-8d7c-37b19fa3a4aa",
-            }
+            // "env": {
+            //     "LLM_PROVIDER": "Ollama",
+            //     "LLM_MODEL": "devstral:24b",
+            //     "LLM_BASE_URL": "http://localhost:11434",
+            //     "LLM_TEMPERATURE": "0.0",
+            //     "EXA_API_KEY": "4b009399-5ab5-487b-8d7c-37b19fa3a4aa",
+            // }
         }
     ]
 }
