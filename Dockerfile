@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Copy project files
 COPY pyproject.toml ./
-COPY main.py ./
+COPY src/*.py ./
 COPY README.md ./
 
 # Upgrade pip and install hatchling build tool
