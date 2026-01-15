@@ -1,7 +1,7 @@
 from typing import List
 
 from pydantic import ConfigDict, BaseModel, Field
-from src.settings import settings
+from src.sequential_thinking.settings import settings
 
 # Define a base Agent model using Pydantic
 class Agent(BaseModel):

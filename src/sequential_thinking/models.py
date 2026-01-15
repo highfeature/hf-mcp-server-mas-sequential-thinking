@@ -8,7 +8,7 @@ from pydantic import (
 )
 from typing import Optional, ClassVar
 
-from src.settings import settings
+from src.sequential_thinking.settings import settings
 
 
 class ThoughtData(BaseModel):

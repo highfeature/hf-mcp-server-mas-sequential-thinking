@@ -6,15 +6,16 @@ from dataclasses import dataclass, field
 from typing import AsyncIterator, Dict, List, Optional
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastmcp import FastMCP
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from src.models import ThoughtData
-from src.team import create_sequential_thinking_team, Team
-from src.settings import settings
-from src.log import setup_logging, format_thought_for_log
+from src.sequential_thinking.models import ThoughtData
+from src.sequential_thinking.team import create_sequential_thinking_team, Team
+from src.sequential_thinking.settings import settings
+from src.sequential_thinking.log import setup_logging, format_thought_for_log
 
 load_dotenv()
 setup_logging()
@@ -330,6 +331,25 @@ app = FastAPI(
 # Mount the FastMCP app to the FastAPI app
 app.mount("/mcp-server", mcp_app, "mcp")
 
+# # Add explicit OPTIONS handler for /mcp
+# @app.options("/mcp")
+# def options_mcp():
+#     return Response(
+#         headers={
+#             "Access-Control-Allow-Origin": "*",
+#             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+#             "Access-Control-Allow-Headers": "Content-Type, Authorization",
+#         }
+#     )
+# This automatically handles OPTIONS for all routes, including /mcp.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Add response on OPTIONS for openapi_url, workaround for support openwebui
 @app.options("/mcp-server/openapi.json")
 # @log_cancellation
@@ -360,49 +380,49 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
 
 # --- Main Execution ---
-def main():
-    print(os.getcwd())
+# def main():
+#     print(os.getcwd())
 
-    parser = argparse.ArgumentParser(description="Run the hf-context7 MCP server")
-    parser.add_argument("--transport", choices=["stdio", "http", "sse"], required=False,
-                        help="Transport to use for communication", default="http")
-    parser.add_argument("--port", type=int, default=8090,
-                        help="Port number for HTTP transport")
+#     parser = argparse.ArgumentParser(description="Run the hf-context7 MCP server")
+#     parser.add_argument("--transport", choices=["stdio", "http", "sse"], required=False,
+#                         help="Transport to use for communication", default="http")
+#     parser.add_argument("--port", type=int, default=8090,
+#                         help="Port number for HTTP transport")
 
-    args = parser.parse_args()
+#     args = parser.parse_args()
 
-    selected_provider = settings.LLM_PROVIDER
-    settings.logger.info(f"Using provider: {selected_provider}")
-    settings.logger.info(f"Initializing Sequential Thinking Server (Coordinate Mode) with Provider: {selected_provider}...")
+#     selected_provider = settings.LLM_PROVIDER
+#     settings.logger.info(f"Using provider: {selected_provider}")
+#     settings.logger.info(f"Initializing Sequential Thinking Server (Coordinate Mode) with Provider: {selected_provider}...")
 
-    global app_context
-    if not app_context:
-        settings.logger.info("Initializing application resources directly (Coordinate Mode)...")
-        try:
-            team = create_sequential_thinking_team()
-            app_context = AppContext(team=team)
-            settings.logger.info(f"Pydantic team initialized directly in coordinate mode using provider: {selected_provider}.")
-        except Exception as e:
-            settings.logger.critical(f"Failed to initialize Pydantic team: {e}", exc_info=True)
-            raise
+#     global app_context
+#     if not app_context:
+#         settings.logger.info("Initializing application resources directly (Coordinate Mode)...")
+#         try:
+#             team = create_sequential_thinking_team()
+#             app_context = AppContext(team=team)
+#             settings.logger.info(f"Pydantic team initialized directly in coordinate mode using provider: {selected_provider}.")
+#         except Exception as e:
+#             settings.logger.critical(f"Failed to initialize Pydantic team: {e}", exc_info=True)
+#             raise
 
-    try:
-        settings.logger.info("Sequential Thinking MCP Server running on stdio (Coordinate Mode)")
-        if not app_context:
-            settings.logger.critical("FATAL: Application context not initialized before run.")
-            raise Exception("Application context not initialized")
+#     try:
+#         settings.logger.info("Sequential Thinking MCP Server running on stdio (Coordinate Mode)")
+#         if not app_context:
+#             settings.logger.critical("FATAL: Application context not initialized before run.")
+#             raise Exception("Application context not initialized")
 
-        if args.transport == "stdio":
-            mcp.run(transport="stdio", host="127.0.0.1", port=args.port, path="/mcp/")
-        elif args.transport == "sse":
-            app = mcp.sse_app("/sse/")
-            mcp.run(transport="sse", host="127.0.0.1", port=args.port, path="/sse/")
-        elif args.transport == "http":
-            app = mcp.http_app("/mcp/")
-            mcp.run(transport="streamable-http", host="127.0.0.1", port=args.port, path="/mcp/")
-    finally:
-        settings.logger.info("Shutting down application resources...")
-        app_context = None
+#         if args.transport == "stdio":
+#             mcp.run(transport="stdio", host="127.0.0.1", port=args.port, path="/mcp/")
+#         elif args.transport == "sse":
+#             app = mcp.sse_app("/sse/")
+#             mcp.run(transport="sse", host="127.0.0.1", port=args.port, path="/sse/")
+#         elif args.transport == "http":
+#             app = mcp.http_app("/mcp/")
+#             mcp.run(transport="streamable-http", host="127.0.0.1", port=args.port, path="/mcp/")
+#     finally:
+#         settings.logger.info("Shutting down application resources...")
+#         app_context = None
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

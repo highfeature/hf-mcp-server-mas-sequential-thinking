@@ -218,7 +218,7 @@ The server will start and listen for requests via stdio or sse or http, making t
 The tool expects arguments matching the `ThoughtData` Pydantic model:
 
 ```python
-# Simplified representation from src/models.py
+# Simplified representation from src/sequential_thinking/models.py
 class ThoughtData(BaseModel):
     thought: str                            # Content of the current thought/step
     thoughtNumber: int                      # Sequence number (>=1)
@@ -288,7 +288,8 @@ The tool returns a JSON string containing:
 
     # Using pip
     pip install -r requirements.txt
-    pip install -r requirements-dev.txt # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
+    pip install -r requirements-
+    dev.txt # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
     ```
 4.  **Run Checks:**
     Execute linters, formatters, and tests (adjust commands based on your project setup).

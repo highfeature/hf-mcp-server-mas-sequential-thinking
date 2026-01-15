@@ -3,10 +3,10 @@ import logging.handlers
 import logging.config
 import sys
 from pathlib import Path
-# from agno.utils.log import agent_logger, team_logger
+from typing import Optional
 
-from src.models import ThoughtData
-from src.settings import settings
+from src.sequential_thinking.models import ThoughtData
+from src.sequential_thinking.settings import settings
 
 # def init_logger():
 #     # Clear any existing logging handlers
@@ -113,7 +113,7 @@ def format_thought_for_log(thought_data: ThoughtData) -> str:
     """
     prefix: str
     context: str = ""
-    branch_info_log: str = None # Optional line for branch-specific details
+    branch_info_log: Optional[str] = None # Optional line for branch-specific details
 
     # Determine the type of thought and associated context
     if thought_data.isRevision and thought_data.revisesThought is not None:
