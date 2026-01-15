@@ -378,6 +378,12 @@ MIT
 
 ## Release Notes
 
+### 0.5.0
+    - Replace Agno Framework by Pydandic-ai. 
+    - Refactor the server
+    - Refactor the logging system.
+    - Updated dependencies
+
 ### 0.4.0
     - Added support for DuckDuckGoTools in Researcher agents, to make a web search Without API key. 
     - Updated dependencies
