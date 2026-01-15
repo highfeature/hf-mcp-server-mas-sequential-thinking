@@ -142,7 +142,6 @@
                 "db_server_port": "5432"
             },
             "console": "integratedTerminal",
-            "justMyCode": false,
         },
         {
             "name": "uv pytest debug",

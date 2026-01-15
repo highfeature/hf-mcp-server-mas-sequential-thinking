@@ -46,6 +46,8 @@ dev = [
     "pytest-timeout>=2.4.0",
     "pytest-xdist>=3.6.1",
     "ruff",
+    "black",
+    "mypy",
 ]
 
 [tool.pytest.ini_options]

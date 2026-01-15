@@ -1,21 +1,26 @@
-import argparse
 import asyncio
-import os
+import json
+import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import AsyncIterator, Dict, List, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastmcp import FastMCP
 from dotenv import load_dotenv
 from pydantic import ValidationError
+from starlette.concurrency import iterate_in_threadpool
 
 from src.sequential_thinking.models import ThoughtData
 from src.sequential_thinking.team import create_sequential_thinking_team, Team
 from src.sequential_thinking.settings import settings
-from src.sequential_thinking.log import setup_logging, format_thought_for_log
+from src.sequential_thinking.log import (
+    setup_logging,
+    format_thought_for_log,
+    log_request,
+)
 
 load_dotenv()
 setup_logging()
@@ -30,9 +35,11 @@ setup_logging()
 #             raise
 #     return wrapper
 
+
 @dataclass
 class AppContext:
     """Holds shared application resources, like the Pydantic team."""
+
     team: Team
     thought_history: List[ThoughtData] = field(default_factory=list)
     branches: Dict[str, List[ThoughtData]] = field(default_factory=dict)
@@ -53,35 +60,48 @@ class AppContext:
 
     def get_all_branches(self) -> Dict[str, int]:
         """Get all branch IDs and their thought counts"""
-        return {branch_id: len(thoughts) for branch_id, thoughts in self.branches.items()}
+        return {
+            branch_id: len(thoughts) for branch_id, thoughts in self.branches.items()
+        }
 
-app_context: AppContext = None
 
-# @asynccontextmanager
+app_context: Optional[AppContext] = None
+
+
+@asynccontextmanager
 # @log_cancellation
-# async def app_lifespan() -> AsyncIterator[None]:
-#     """Manages the application lifecycle."""
-#     global app_context
-#     settings.logger.info("Initializing application resources (Coordinate Mode)...")
-#     try:
-#         team = create_sequential_thinking_team()
-#         app_context = AppContext(team=team)
-#         provider = settings.LLM_PROVIDER
-#         settings.logger.info(f"Pydantic team initialized in coordinate mode using provider: {provider}.")
-#     except Exception as e:
-#         settings.logger.critical(f"Failed to initialize Pydantic team during lifespan setup: {e}", exc_info=True)
-#         raise e
+async def app_lifespan() -> AsyncIterator[None]:
+    """Manages the application lifecycle."""
+    global app_context
+    settings.logger_fastapi.info(
+        "Initializing application resources (Coordinate Mode)..."
+    )
+    try:
+        team = create_sequential_thinking_team()
+        app_context = AppContext(team=team)
+        provider = settings.LLM_PROVIDER
+        settings.logger_fastapi.info(
+            f"Pydantic team initialized in coordinate mode using provider: {provider}."
+        )
+    except Exception as e:
+        settings.logger_fastapi.critical(
+            f"Failed to initialize Pydantic team during lifespan setup: {e}",
+            exc_info=True,
+        )
+        raise e
 
-#     try:
-#         yield
-#     finally:
-#         settings.logger.info("Shutting down application resources...")
-#         app_context = None
+    try:
+        yield
+    finally:
+        settings.logger_fastapi.info("Shutting down application resources...")
+        app_context = None
+
 
 # Initialize FastMCP =========================================
 mcp = FastMCP("HighfeatureMcpServerSequentialThinking")
 
 # --- MCP Handlers ---
+
 
 @mcp.prompt("sequential-thinking")
 def sequential_thinking_prompt(problem: str, context: str = ""):
@@ -89,7 +109,7 @@ def sequential_thinking_prompt(problem: str, context: str = ""):
     Starter prompt for sequential thinking that ENCOURAGES non-linear exploration
     using coordinate mode. Returns separate user and assistant messages.
     """
-    min_thoughts = 5 # Set a reasonable minimum number of initial thoughts
+    min_thoughts = 5  # Set a reasonable minimum number of initial thoughts
 
     user_prompt_text = f"""Initiate a comprehensive sequential thinking process for the following problem:
 
@@ -123,17 +143,28 @@ def sequential_thinking_prompt(problem: str, context: str = ""):
             "description": "Starter prompt for non-linear sequential thinking (coordinate mode), providing problem and guidelines separately.",
             "messages": [
                 {"role": "user", "content": {"type": "text", "text": user_prompt_text}},
-                {"role": "assistant", "content": {"type": "text", "text": assistant_guidelines}}
-            ]
+                {
+                    "role": "assistant",
+                    "content": {"type": "text", "text": assistant_guidelines},
+                },
+            ],
         }
     ]
 
+
 # @log_cancellation
 @mcp.tool()
-async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: int, nextThoughtNeeded: bool,
-                      isRevision: bool = False, revisesThought: Optional[int] = None,
-                      branchFromThought: Optional[int] = None, branchId: Optional[str] = None,
-                      needsMoreThoughts: bool = False) -> str:
+async def sequentialthinking(
+    thought: str,
+    thoughtNumber: int,
+    totalThoughts: int,
+    nextThoughtNeeded: bool,
+    isRevision: bool = False,
+    revisesThought: Optional[int] = None,
+    branchFromThought: Optional[int] = None,
+    branchId: Optional[str] = None,
+    needsMoreThoughts: bool = False,
+) -> str:
     """
     A detailed tool for dynamic and reflective problem-solving through thoughts.
 
@@ -194,14 +225,21 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
 
     # Initialize application context if not already initialized
     if not app_context:
-        settings.logger.info("Initializing application resources directly (Coordinate Mode)...")
+        settings.logger_team.info(
+            "Initializing application resources directly (Coordinate Mode)..."
+        )
         try:
             team = create_sequential_thinking_team()
             app_context = AppContext(team=team)
             provider = settings.LLM_PROVIDER
-            settings.logger.info(f"Pydantic team initialized directly in coordinate mode using provider: {provider}.")
+            settings.logger_team.info(
+                f"Pydantic team initialized directly in coordinate mode using provider: {provider}."
+            )
         except Exception as e:
-            settings.logger.critical(f"Failed to initialize Pydantic team during tool call: {e}", exc_info=True)
+            settings.logger_team.critical(
+                f"Failed to initialize Pydantic team during tool call: {e}",
+                exc_info=True,
+            )
             return f"Critical Error: Application context not available and re-initialization failed: {e}"
 
     try:
@@ -209,13 +247,13 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
         current_input_thought = ThoughtData(
             thought=thought,
             thoughtNumber=thoughtNumber,
-            totalThoughts=totalThoughts, # Pydantic validator handles minimum now
+            totalThoughts=totalThoughts,  # Pydantic validator handles minimum now
             nextThoughtNeeded=nextThoughtNeeded,
             isRevision=isRevision,
             revisesThought=revisesThought,
             branchFromThought=branchFromThought,
             branchId=branchId,
-            needsMoreThoughts=needsMoreThoughts
+            needsMoreThoughts=needsMoreThoughts,
         )
 
         # Use the validated/adjusted value from the instance
@@ -223,7 +261,10 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
 
         # Adjust nextThoughtNeeded based on validated totalThoughts
         adjusted_next_thought_needed = current_input_thought.nextThoughtNeeded
-        if current_input_thought.thoughtNumber >= adjusted_total_thoughts and not current_input_thought.needsMoreThoughts:
+        if (
+            current_input_thought.thoughtNumber >= adjusted_total_thoughts
+            and not current_input_thought.needsMoreThoughts
+        ):
             adjusted_next_thought_needed = False
 
         # --- Logging and History Update ---
@@ -234,33 +275,44 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
             log_prefix = f"--- Received BRANCH Thought (from #{current_input_thought.branchFromThought}, ID: {current_input_thought.branchId}) ---"
 
         formatted_log_thought = format_thought_for_log(current_input_thought)
-        settings.logger.info(f"\n{log_prefix}\n{formatted_log_thought}\n")
+        settings.logger_team.info(f"\n{log_prefix}\n{formatted_log_thought}\n")
 
         # Add the *validated* thought to history
         app_context.add_thought(current_input_thought)
 
         # --- Process Thought with Team (Coordinate Mode) ---
-        settings.logger.info(f"Passing thought #{current_input_thought.thoughtNumber} to the Coordinator...")
+        settings.logger_team.info(
+            f"Passing thought #{current_input_thought.thoughtNumber} to the Coordinator..."
+        )
 
         input_prompt = f"Process Thought #{current_input_thought.thoughtNumber}:\n"
-        if current_input_thought.isRevision and current_input_thought.revisesThought is not None:
+        if (
+            current_input_thought.isRevision
+            and current_input_thought.revisesThought is not None
+        ):
             # Find the original thought text
             original_thought_text = "Unknown Original Thought"
-            for hist_thought in app_context.thought_history[:-1]: # Exclude current one
+            for hist_thought in app_context.thought_history[:-1]:  # Exclude current one
                 if hist_thought.thoughtNumber == current_input_thought.revisesThought:
                     original_thought_text = hist_thought.thought
                     break
-            input_prompt += f"**This is a REVISION of Thought #{current_input_thought.revisesThought}** (Original: \"{original_thought_text}\").\n"
-        elif current_input_thought.branchFromThought is not None and current_input_thought.branchId is not None:
+            input_prompt += f'**This is a REVISION of Thought #{current_input_thought.revisesThought}** (Original: "{original_thought_text}").\n'
+        elif (
+            current_input_thought.branchFromThought is not None
+            and current_input_thought.branchId is not None
+        ):
             # Find the branching point thought text
             branch_point_text = "Unknown Branch Point"
             for hist_thought in app_context.thought_history[:-1]:
-                if hist_thought.thoughtNumber == current_input_thought.branchFromThought:
+                if (
+                    hist_thought.thoughtNumber
+                    == current_input_thought.branchFromThought
+                ):
                     branch_point_text = hist_thought.thought
                     break
-            input_prompt += f"**This is a BRANCH (ID: {current_input_thought.branchId}) from Thought #{current_input_thought.branchFromThought}** (Origin: \"{branch_point_text}\").\n"
+            input_prompt += f'**This is a BRANCH (ID: {current_input_thought.branchId}) from Thought #{current_input_thought.branchFromThought}** (Origin: "{branch_point_text}").\n'
 
-        input_prompt += f"\nThought Content: \"{current_input_thought.thought}\""
+        input_prompt += f'\nThought Content: "{current_input_thought.thought}"'
 
         # Call the team's arun method. The coordinator agent will handle it.
         try:
@@ -270,14 +322,22 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
             raise
 
         # Ensure coordinator_response is a string, default to empty string if None
-        coordinator_response_content = team_response.content if hasattr(team_response, 'content') else None
-        coordinator_response = str(coordinator_response_content) if coordinator_response_content is not None else ""
+        coordinator_response_content = (
+            team_response.content if hasattr(team_response, "content") else None
+        )
+        coordinator_response = (
+            str(coordinator_response_content)
+            if coordinator_response_content is not None
+            else ""
+        )
 
-        settings.logger.info(f"Coordinator finished processing thought #{current_input_thought.thoughtNumber}.")
-        settings.logger.debug(f"Coordinator Raw Response:\n{coordinator_response}")
+        settings.logger_team.info(
+            f"Coordinator finished processing thought #{current_input_thought.thoughtNumber}."
+        )
+        settings.logger_team.debug(f"Coordinator Raw Response:\n{coordinator_response}")
 
         # --- Guidance for Next Step (Coordinate Mode) ---
-        additional_guidance = "\n\nGuidance for next step:" # Initialize
+        additional_guidance = "\n\nGuidance for next step:"  # Initialize
 
         if not adjusted_next_thought_needed:
             additional_guidance = "\n\nThis is the final thought. Review the Coordinator's final synthesis."
@@ -295,25 +355,34 @@ async def sequentialthinking(thought: str, thoughtNumber: int, totalThoughts: in
             "branches": list(app_context.branches.keys()),
             "thoughtHistoryLength": len(app_context.thought_history),
             "branchDetails": {
-                "currentBranchId": current_input_thought.branchId if current_input_thought.branchFromThought is not None else "main",
+                "currentBranchId": (
+                    current_input_thought.branchId
+                    if current_input_thought.branchFromThought is not None
+                    else "main"
+                ),
                 "branchOriginThought": current_input_thought.branchFromThought,
-                "allBranches": app_context.get_all_branches()
+                "allBranches": app_context.get_all_branches(),
             },
             "isRevision": current_input_thought.isRevision,
-            "revisesThought": current_input_thought.revisesThought if current_input_thought.isRevision else None,
+            "revisesThought": (
+                current_input_thought.revisesThought
+                if current_input_thought.isRevision
+                else None
+            ),
             "isBranch": current_input_thought.branchFromThought is not None,
-            "status": "success"
+            "status": "success",
         }
 
         # Return only the coordinatorResponse as a string
         return result_data["coordinatorResponse"]
 
     except ValidationError as e:
-        settings.logger.error(f"Validation Error processing tool call: {e}")
+        settings.logger_team.error(f"Validation Error processing tool call: {e}")
         return f"Input validation failed: {e}"
     except Exception as e:
-        settings.logger.exception("Error processing tool call")
+        settings.logger_team.exception("Error processing tool call")
         return f"An unexpected error occurred: {str(e)}"
+
 
 # Mount the MCP app as a sub-application
 mcp_app = mcp.http_app()
@@ -331,16 +400,6 @@ app = FastAPI(
 # Mount the FastMCP app to the FastAPI app
 app.mount("/mcp-server", mcp_app, "mcp")
 
-# # Add explicit OPTIONS handler for /mcp
-# @app.options("/mcp")
-# def options_mcp():
-#     return Response(
-#         headers={
-#             "Access-Control-Allow-Origin": "*",
-#             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-#             "Access-Control-Allow-Headers": "Content-Type, Authorization",
-#         }
-#     )
 # This automatically handles OPTIONS for all routes, including /mcp.
 app.add_middleware(
     CORSMiddleware,
@@ -350,6 +409,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# add a log middleware
+@app.middleware("http")
+async def log_middleware(request: Request, call_next):
+    req_id = str(uuid.uuid4())
+    try:
+        #### request ####
+        request.state.req_id = req_id
+        request.state.body = json.loads(await request.body() or "{}")
+        log_request(request)
+
+        #### response ####
+        response = await call_next(request)
+        response_body = []
+        if response.headers.get("content-type") == "application/json":
+            response_body = [chunk async for chunk in response.body_iterator]
+            response.body_iterator = iterate_in_threadpool(iter(response_body))
+        return response
+    except Exception:
+        # Unexpected error handling
+        settings.logger_fastapi.error(req_id, {"error_message": "ERR_UNEXPECTED"})
+        raise HTTPException(status_code=500, detail="ERR_UNEXPECTED")
+
+
 # Add response on OPTIONS for openapi_url, workaround for support openwebui
 @app.options("/mcp-server/openapi.json")
 # @log_cancellation
@@ -358,9 +441,10 @@ async def options_openapi(request: Request):
     response = {
         "method": "OPTIONS",
         "allowed_methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
-        "description": "Custom OPTIONS response for /openapi.json"
+        "description": "Custom OPTIONS response for /openapi.json",
     }
     return JSONResponse(content=response)
+
 
 # Define FastAPI routes
 @app.get("/")
@@ -373,11 +457,13 @@ async def root() -> dict[str, str]:
         "status": "running",
     }
 
+
 @app.get("/health-check")
 # @log_cancellation
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy"}
+
 
 # --- Main Execution ---
 # def main():
@@ -392,24 +478,24 @@ async def health_check() -> dict[str, str]:
 #     args = parser.parse_args()
 
 #     selected_provider = settings.LLM_PROVIDER
-#     settings.logger.info(f"Using provider: {selected_provider}")
-#     settings.logger.info(f"Initializing Sequential Thinking Server (Coordinate Mode) with Provider: {selected_provider}...")
+#     settings.logger_fastapi.info(f"Using provider: {selected_provider}")
+#     settings.logger_fastapi.info(f"Initializing Sequential Thinking Server (Coordinate Mode) with Provider: {selected_provider}...")
 
 #     global app_context
 #     if not app_context:
-#         settings.logger.info("Initializing application resources directly (Coordinate Mode)...")
+#         settings.logger_fastapi.info("Initializing application resources directly (Coordinate Mode)...")
 #         try:
 #             team = create_sequential_thinking_team()
 #             app_context = AppContext(team=team)
-#             settings.logger.info(f"Pydantic team initialized directly in coordinate mode using provider: {selected_provider}.")
+#             settings.logger_fastapi.info(f"Pydantic team initialized directly in coordinate mode using provider: {selected_provider}.")
 #         except Exception as e:
-#             settings.logger.critical(f"Failed to initialize Pydantic team: {e}", exc_info=True)
+#             settings.logger_fastapi.critical(f"Failed to initialize Pydantic team: {e}", exc_info=True)
 #             raise
 
 #     try:
-#         settings.logger.info("Sequential Thinking MCP Server running on stdio (Coordinate Mode)")
+#         settings.logger_fastapi.info("Sequential Thinking MCP Server running on stdio (Coordinate Mode)")
 #         if not app_context:
-#             settings.logger.critical("FATAL: Application context not initialized before run.")
+#             settings.logger_fastapi.critical("FATAL: Application context not initialized before run.")
 #             raise Exception("Application context not initialized")
 
 #         if args.transport == "stdio":
@@ -421,7 +507,7 @@ async def health_check() -> dict[str, str]:
 #             app = mcp.http_app("/mcp/")
 #             mcp.run(transport="streamable-http", host="127.0.0.1", port=args.port, path="/mcp/")
 #     finally:
-#         settings.logger.info("Shutting down application resources...")
+#         settings.logger_fastapi.info("Shutting down application resources...")
 #         app_context = None
 
 # if __name__ == "__main__":

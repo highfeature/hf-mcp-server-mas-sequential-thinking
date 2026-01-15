@@ -3,6 +3,7 @@ from typing import List
 from pydantic import ConfigDict, BaseModel, Field
 from src.sequential_thinking.settings import settings
 
+
 # Define a base Agent model using Pydantic
 class Agent(BaseModel):
     name: str
@@ -16,23 +17,29 @@ class Agent(BaseModel):
     debug_mode: bool = False
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+
 # Define a base Model class using Pydantic
 class Model(BaseModel):
     id: str
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+
 # Create specific model classes for each provider
 class DeepSeek(Model):
     pass
 
+
 class Groq(Model):
     pass
+
 
 class Ollama(Model):
     pass
 
+
 class OpenRouter(Model):
     pass
+
 
 def get_model_config() -> tuple[str, str]:
     """
@@ -44,31 +51,42 @@ def get_model_config() -> tuple[str, str]:
         - agent_model_id: The model ID for the specialist agents.
     """
     provider = settings.LLM_PROVIDER
-    settings.logger.info(f"Selected LLM Provider: {provider}")
+    settings.logger_team.info(f"Selected LLM Provider: {provider}")
 
     if provider == "deepseek":
         # Use environment variables for DeepSeek model IDs if set, otherwise use defaults
         team_model_id = settings.DEEPSEEK_TEAM_MODEL_ID
         agent_model_id = settings.DEEPSEEK_AGENT_MODEL_ID
-        settings.logger.info(f"Using DeepSeek: Team Model='{team_model_id}', Agent Model='{agent_model_id}'")
+        settings.logger_team.info(
+            f"Using DeepSeek: Team Model='{team_model_id}', Agent Model='{agent_model_id}'"
+        )
     elif provider == "groq":
         team_model_id = settings.GROQ_TEAM_MODEL_ID
         agent_model_id = settings.GROQ_AGENT_MODEL_ID
-        settings.logger.info(f"Using Groq: Team Model='{team_model_id}', Agent Model='{agent_model_id}'")
+        settings.logger_team.info(
+            f"Using Groq: Team Model='{team_model_id}', Agent Model='{agent_model_id}'"
+        )
     elif provider == "openrouter":
         team_model_id = settings.OPENROUTER_TEAM_MODEL_ID
         agent_model_id = settings.OPENROUTER_AGENT_MODEL_ID
-        settings.logger.info(f"Using OpenRouter: Team Model='{team_model_id}', Agent Model='{agent_model_id}'")
+        settings.logger_team.info(
+            f"Using OpenRouter: Team Model='{team_model_id}', Agent Model='{agent_model_id}'"
+        )
     elif provider.lower() == "ollama":
         team_model_id = settings.OLLAMA_TEAM_MODEL_ID
         agent_model_id = settings.OLLAMA_AGENT_MODEL_ID
-        settings.logger.info(f"Using Ollama: Team Model='{team_model_id}', Agent Model='{agent_model_id}'")
+        settings.logger_team.info(
+            f"Using Ollama: Team Model='{team_model_id}', Agent Model='{agent_model_id}'"
+        )
     else:
-        settings.logger.error(f"Unsupported LLM_PROVIDER: {provider}. Defaulting to Ollama.")
+        settings.logger_team.error(
+            f"Unsupported LLM_PROVIDER: {provider}. Defaulting to Ollama."
+        )
         team_model_id = "deepseek-r1:7b"
         agent_model_id = "deepseek-r1:7b"
 
     return team_model_id, agent_model_id
+
 
 class Team(BaseModel):
     name: str
@@ -99,6 +117,7 @@ class Team(BaseModel):
         # In a real implementation, this would coordinate with the team members and process the input
         return f"Team {self.name} has processed the input: {input_text}"
 
+
 def create_sequential_thinking_team() -> Team:
     """
     Creates and configures the Pydantic-based multi-agent team for sequential thinking,
@@ -113,8 +132,10 @@ def create_sequential_thinking_team() -> Team:
         # agent_model_instance = Model(id=agent_model_id)
 
     except Exception as e:
-        settings.logger.error(f"Error initializing models: {e}")
-        settings.logger.error("Please ensure the necessary API keys and configurations are set for the selected provider.")
+        settings.logger_team.error(f"Error initializing models: {e}")
+        settings.logger_team.error(
+            "Please ensure the necessary API keys and configurations are set for the selected provider."
+        )
         raise
 
     # Agent definitions for specialists
@@ -136,7 +157,7 @@ def create_sequential_thinking_team() -> Team:
             " 7. Return your response to the Team Coordinator.",
             "Focus on fulfilling the delegated planning sub-task accurately and efficiently.",
         ],
-        model_id=agent_model_id, # Use the designated agent model
+        model_id=agent_model_id,  # Use the designated agent model
         add_datetime_to_instructions=True,
         markdown=True,
         debug_mode=settings.DEBUG_AGENTS,
@@ -146,7 +167,14 @@ def create_sequential_thinking_team() -> Team:
         name="Researcher",
         role="Information Gatherer",
         description="Gathers and validates information based on delegated research sub-tasks.",
-        tools=["ThinkingTools()", "DuckDuckGoTools()" if settings.WEB_SEARCH_TOOL == "DuckDuckGoTools" else "ExaTools()"],
+        tools=[
+            "ThinkingTools()",
+            (
+                "DuckDuckGoTools()"
+                if settings.WEB_SEARCH_TOOL == "DuckDuckGoTools"
+                else "ExaTools()"
+            ),
+        ],
         instructions=[
             "You are the Information Gatherer specialist.",
             "You will receive specific sub-tasks from the Team Coordinator requiring information gathering or verification.",
@@ -160,7 +188,7 @@ def create_sequential_thinking_team() -> Team:
             " 7. Return your response to the Team Coordinator.",
             "Focus on accuracy and relevance for the delegated research request.",
         ],
-        model_id=agent_model_id, # Use the designated agent model
+        model_id=agent_model_id,  # Use the designated agent model
         add_datetime_to_instructions=True,
         markdown=True,
         debug_mode=settings.DEBUG_AGENTS,
@@ -184,7 +212,7 @@ def create_sequential_thinking_team() -> Team:
             " 7. Return your response to the Team Coordinator.",
             "Focus on depth and clarity for the delegated analytical task.",
         ],
-        model_id=agent_model_id, # Use the designated agent model
+        model_id=agent_model_id,  # Use the designated agent model
         add_datetime_to_instructions=True,
         markdown=True,
         debug_mode=settings.DEBUG_AGENTS,
@@ -209,7 +237,7 @@ def create_sequential_thinking_team() -> Team:
             " 8. Return your response to the Team Coordinator.",
             "Focus on rigorous and constructive critique for the delegated evaluation task.",
         ],
-        model_id=agent_model_id, # Use the designated agent model
+        model_id=agent_model_id,  # Use the designated agent model
         add_datetime_to_instructions=True,
         markdown=True,
         debug_mode=settings.DEBUG_AGENTS,
@@ -233,7 +261,7 @@ def create_sequential_thinking_team() -> Team:
             "Focus on creating clarity and coherence for the delegated synthesis task.",
             "**For the final synthesis task provided by the Coordinator:** Aim for a concise and high-level integration. Focus on the core synthesized understanding and key takeaways, rather than detailing the step-by-step process or extensive analysis of each component.",
         ],
-        model_id=agent_model_id, # Use the designated agent model
+        model_id=agent_model_id,  # Use the designated agent model
         add_datetime_to_instructions=True,
         markdown=True,
         debug_mode=settings.DEBUG_AGENTS,
@@ -244,8 +272,14 @@ def create_sequential_thinking_team() -> Team:
     team = Team(
         name="SequentialThinkingTeam",
         mode="coordinate",
-        members=[planner, researcher, analyzer, critic, synthesizer], # ONLY specialist agents
-        model=team_model_instance, # Model for the Team's coordination logic
+        members=[
+            planner,
+            researcher,
+            analyzer,
+            critic,
+            synthesizer,
+        ],  # ONLY specialist agents
+        model=team_model_instance,  # Model for the Team's coordination logic
         description="You are the Coordinator of a specialist team processing sequential thoughts. Your role is to manage the flow, delegate tasks, and synthesize results.",
         instructions=[
             "You are the Coordinator managing a team of specialists (Planner, Researcher, Analyzer, Critic, Synthesizer) in 'coordinate' mode.",
@@ -267,20 +301,20 @@ def create_sequential_thinking_team() -> Team:
             " - Integrate specialist responses logically.",
             " - Resolve conflicts or highlight discrepancies.",
             " - Formulate a final answer representing the combined effort.",
-            "Remember: Orchestrate the team effectively and efficiently."
+            "Remember: Orchestrate the team effectively and efficiently.",
         ],
         success_criteria=[
             "Break down input thoughts into appropriate sub-tasks",
             "Delegate sub-tasks efficiently to the most relevant specialists",
             "Specialists execute delegated sub-tasks accurately",
             "Synthesize specialist responses into a cohesive final output addressing the original thought",
-            "Identify and recommend necessary revisions or branches based on analysis"
+            "Identify and recommend necessary revisions or branches based on analysis",
         ],
-        enable_agentic_context=False, # Allows context sharing managed by the Team (coordinator)
-        share_member_interactions=False, # Allows members' interactions to be shared
+        enable_agentic_context=False,  # Allows context sharing managed by the Team (coordinator)
+        share_member_interactions=False,  # Allows members' interactions to be shared
         markdown=True,
         debug_mode=settings.DEBUG_AGENTS,
-        add_datetime_to_instructions=True
+        add_datetime_to_instructions=True,
     )
 
     return team

@@ -1,38 +1,89 @@
 import logging
 import logging.handlers
 import logging.config
-import sys
-from pathlib import Path
+import traceback
 from typing import Optional
 
+from pydantic import BaseModel
+from starlette.requests import Request
+
+from src.sequential_thinking.log_config import LOGGING_CONFIG
 from src.sequential_thinking.models import ThoughtData
 from src.sequential_thinking.settings import settings
 
-# def init_logger():
-#     # Clear any existing logging handlers
-#     loggers = ("uvicorn", "uvicorn.access", "uvicorn.error", "fastapi", "asyncio", "starlette")
-#     for logger_name in loggers:
-#         logging_logger = logging.getLogger(logger_name)
-#         logging_logger.handlers = []  # Clear any existing handlers
-#         logging_logger.propagate = True  # Allow logs to propagate to the root logger
-#     # setup logging for the fastmcp server
-#     formatter = logging.Formatter(
-#         '%(asctime)s hf-context7 [%(process)d]: %(message)s',
-#         '%b %d %H:%M:%S')
-#     formatter.converter = time.gmtime  # if you want UTC time
-#     log_level = os.environ.get('LOGLEVEL', 'INFO').upper()
-#     # Create a file handler to write logs to a file
-#     file_handler = logging.handlers.WatchedFileHandler('hf-context7.log')
-#     file_handler.setLevel(log_level)
-#     file_handler.setFormatter(formatter)
-#     # Create a stream handler to print logs to the console
-#     console_handler = logging.StreamHandler()
-#     console_handler.setLevel(log_level)  # You can set the desired log level for console output
-#     console_handler.setFormatter(formatter)
-#     settings.logger = logging.getLogger()
-#     # in place of logger.addHandler(file_handler) to avoid appending new handler
-#     settings.logger.handlers[:] = [file_handler,console_handler] 
-#     settings.logger.setLevel(os.environ.get('LOGLEVEL', 'INFO').upper())
+
+def log_request(request: Request):
+    request_info = RequestInfo(request)
+    request_log = RequestLog(
+        req_id=request.state.req_id,
+        method=request_info.method,
+        route=request_info.route,
+        ip=request_info.ip,
+        url=request_info.url,
+        host=request_info.host,
+        body=request_info.body,
+        headers=request_info.headers,
+    )
+    settings.logger_fastapi.info(request_log.dict())
+
+
+def log_error(uuid: str, response_body: dict):
+    error_log = ErrorLog(
+        req_id=uuid,
+        error_message=response_body["error_message"],
+    )
+    settings.logger_fastapi.error(error_log.dict())
+    settings.logger_fastapi.error(traceback.format_exc())
+
+
+class RequestInfo:
+    def __init__(self, request) -> None:
+        self.request = request
+
+    @property
+    def method(self) -> str:
+        return str(self.request.method)
+
+    @property
+    def route(self) -> str:
+        return self.request["path"]
+
+    @property
+    def ip(self) -> str:
+        return str(self.request.client.host)
+
+    @property
+    def url(self) -> str:
+        return str(self.request.url)
+
+    @property
+    def host(self) -> str:
+        return str(self.request.url.hostname)
+
+    @property
+    def headers(self) -> dict:
+        return {key: value for key, value in self.request.headers.items()}
+
+    @property
+    def body(self) -> dict:
+        return self.request.state.body
+
+
+class RequestLog(BaseModel):
+    req_id: str
+    method: str
+    route: str
+    ip: str
+    url: str
+    host: str
+    body: dict
+    headers: dict
+
+
+class ErrorLog(BaseModel):
+    req_id: str
+    error_message: str
+
 
 def setup_logging():
     """
@@ -42,43 +93,48 @@ def setup_logging():
     Returns:
         Logger instance configured with both handlers.
     """
-    # logging.config.fileConfig('logging.ini')
+    logging.config.dictConfig(LOGGING_CONFIG)
 
-    # Create logs directory in user's home
-    log_dir = Path(settings.LOG_FOLDER)
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_level = logging.DEBUG if settings.DEBUG else logging.INFO
+    settings.logger_fastapi = logging.getLogger("fastapi")
+    settings.logger_team = logging.getLogger("team")
+    # settings.logger_agent = logging.getLogger("logger_agent_logger")
+    # logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
 
-    # Create logger
-    settings.logger = logging.getLogger("sequential_thinking")
-    settings.logger.setLevel(log_level)
+    # # Create logs directory in user's home
+    # log_dir = Path(settings.LOG_FOLDER)
+    # log_dir.mkdir(parents=True, exist_ok=True)
+    # log_level = logging.DEBUG if settings.DEBUG else logging.INFO
 
-    # Log format
-    formatter = logging.Formatter(
-        '%(asctime)s - %(levelname)s - [%(name)s] - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    # # Create logger
+    # settings.logger = logging.getLogger("sequential_thinking")
+    # settings.logger.setLevel(log_level)
 
-    # File handler with rotation
-    file_handler = logging.handlers.RotatingFileHandler(
-        log_dir / "sequential_thinking.log",
-        maxBytes=10*1024*1024,  # 10MB
-        backupCount=5,
-        encoding='utf-8'
-    )
-    file_handler.setLevel(log_level)
-    file_handler.setFormatter(formatter)
+    # # Log format
+    # formatter = logging.Formatter(
+    #     '%(asctime)s - %(levelname)s - [%(name)s] - %(message)s',
+    #     datefmt='%Y-%m-%d %H:%M:%S'
+    # )
 
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stderr)
-    console_handler.setLevel(log_level)
-    console_handler.setFormatter(formatter)
+    # # File handler with rotation
+    # file_handler = logging.handlers.RotatingFileHandler(
+    #     log_dir / "sequential_thinking.log",
+    #     maxBytes=10*1024*1024,  # 10MB
+    #     backupCount=5,
+    #     encoding='utf-8'
+    # )
+    # file_handler.setLevel(log_level)
+    # file_handler.setFormatter(formatter)
 
-    # Add handlers to logger
-    settings.logger.addHandler(file_handler)
-    settings.logger.addHandler(console_handler)
+    # # Console handler
+    # console_handler = logging.StreamHandler(sys.stderr)
+    # console_handler.setLevel(log_level)
+    # console_handler.setFormatter(formatter)
 
-    # add submodules
+    # # Add handlers to logger
+    # settings.logger.addHandler(file_handler)
+    # settings.logger.addHandler(console_handler)
+
+    # # add submodules
     # agent_logger.propagate = True
     # agent_logger.addHandler(file_handler)
     # team_logger.propagate = True
@@ -113,35 +169,37 @@ def format_thought_for_log(thought_data: ThoughtData) -> str:
     """
     prefix: str
     context: str = ""
-    branch_info_log: Optional[str] = None # Optional line for branch-specific details
+    branch_info_log: Optional[str] = None  # Optional line for branch-specific details
 
     # Determine the type of thought and associated context
     if thought_data.isRevision and thought_data.revisesThought is not None:
-        prefix = 'Revision'
-        context = f' (revising thought {thought_data.revisesThought})'
-    elif thought_data.branchFromThought is not None and thought_data.branchId is not None:
-        prefix = 'Branch'
-        context = f' (from thought {thought_data.branchFromThought}, ID: {thought_data.branchId})'
+        prefix = "Revision"
+        context = f" (revising thought {thought_data.revisesThought})"
+    elif (
+        thought_data.branchFromThought is not None and thought_data.branchId is not None
+    ):
+        prefix = "Branch"
+        context = f" (from thought {thought_data.branchFromThought}, ID: {thought_data.branchId})"
         # Prepare the extra detail line for branches
         branch_info_log = f"  Branch Details: ID='{thought_data.branchId}', originates from Thought #{thought_data.branchFromThought}"
     else:
         # Standard thought
-        prefix = 'Thought'
+        prefix = "Thought"
         # No extra context needed for standard thoughts
 
     # Construct the header line (e.g., "Thought 1/5", "Revision 3/5 (revising thought 2)")
-    header = f"{prefix} {thought_data.thoughtNumber}/{thought_data.totalThoughts}{context}"
+    header = (
+        f"{prefix} {thought_data.thoughtNumber}/{thought_data.totalThoughts}{context}"
+    )
 
     # Assemble the log entry lines
-    log_lines = [
-        header,
-        f"  Thought: {thought_data.thought}" # Indent thought content
-    ]
+    log_lines = [header, f"  Thought: {thought_data.thought}"]  # Indent thought content
     if branch_info_log:
-        log_lines.append(branch_info_log) # Add branch details if applicable
+        log_lines.append(branch_info_log)  # Add branch details if applicable
 
     # Add status flags line
-    log_lines.append(f"  Next Needed: {thought_data.nextThoughtNeeded}, Needs More: {thought_data.needsMoreThoughts}")
+    log_lines.append(
+        f"  Next Needed: {thought_data.nextThoughtNeeded}, Needs More: {thought_data.needsMoreThoughts}"
+    )
 
     return "\n".join(log_lines)
-
