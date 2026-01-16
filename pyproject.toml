@@ -1,7 +1,7 @@
 [project]
-name = "mcp-server-mas-sequential-thinking"
-version = "0.3.0"
-description = "MCP Agent Implementation for Sequential Thinking"
+name = "hf-sequential-thinking-mcp-server"
+version = "1.0.13"
+description = "MCP server for hf-sequential-thinking documentation"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -9,31 +9,72 @@ authors = [
     { name = "Alain Ivars", email = "alainivars@gmail.com" },
 ]
 dependencies = [
-    "agno",
     "asyncio",
     "exa-py",
-    "python-dotenv",
-    "mcp",
+    "fastmcp",
+    "pydantic-ai",
+    "aiohttp",
+    "async-timeout",
+    "fastapi>=0.115.12",
+    "uv>=0.7.13",
+    "python-dotenv>=1.1.0",
+    "openai",
     "groq",
     "ollama",
     "openrouter",
     "httpx[socks]>=0.28.1",
+    "duckduckgo-search>=8.0.2",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest",
+    "copychat>=0.5.2",
+    "dirty-equals>=0.9.0",
+    "fastapi>=0.115.12",
+    "ipython>=8.12.3",
+    "pdbpp>=0.10.3",
+    "pre-commit",
+    "pyinstrument>=5.0.2",
+    "pyright>=1.1.389",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.23.5",
+    "pytest-cov>=6.2.1",
+    "pytest-env>=1.1.5",
+    "pytest-flakefinder",
+    "pytest-httpx>=0.35.0",
+    "pytest-report>=0.2.1",
+    "pytest-timeout>=2.4.0",
+    "pytest-xdist>=3.6.1",
+    "ruff",
     "black",
-    "isort",
     "mypy",
 ]
 
-[project.scripts]
-mcp-server-mas-sequential-thinking = "main:run"
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+# filterwarnings = ["error::DeprecationWarning"]
+timeout = 3
+env = [
+    "FASTMCP_TEST_MODE=1",
+    'D:FASTMCP_LOG_LEVEL=DEBUG',
+    'D:FASTMCP_ENABLE_RICH_TRACEBACKS=0',
+]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.pyright]
+include = ["src", "tests"]
+exclude = ["**/node_modules", "**/__pycache__", ".venv", ".git", "dist"]
+pythonVersion = "3.10"
+pythonPlatform = "Darwin"
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
+useLibraryCodeForTypes = true
+venvPath = "."
+venv = ".venv"
+strict = ["src/fastmcp/server/server.py"]
 
-[tool.hatch.build.targets.wheel]
-include = ["main.py"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["main"]

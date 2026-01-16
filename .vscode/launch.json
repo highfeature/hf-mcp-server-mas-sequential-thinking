@@ -5,6 +5,81 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: FastAPI 1",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "main:main",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": false,
+        },
+        {
+            "name": "Python Debugger: FastAPI 2",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            // "cwd": "${workspaceFolder}",
+            "args": [
+                "src.main:app",
+                "--reload",
+                "--port",
+                "8090"
+            ],
+            "env": {
+                "MODEL": "hf-tool-llama3.2-3b-32k",
+                "MODEL_URL": "http://0.0.0.0:11434/",
+                "LOG_FOLDER": ".",
+            },
+            "jinja": true,
+            "justMyCode": false,
+        },
+        {
+            "name": "Python Debugger: FastAPI 2.1",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "main:app",
+                "--reload",
+                "--port",
+                "19050"
+            ],
+            "env": {
+                "MODEL": "hf-tool-llama3.2-3b-32k",
+                "MODEL_URL": "http://0.0.0.0:11434/",
+                "LOG_FOLDER": ".",
+            },
+            "jinja": true,
+            "justMyCode": false,
+        },
+        {
+            "name": "Python Debugger: FastAPI 3",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uv",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "run",
+                "python",
+                "src/main.py",
+                "--transport",
+                "http",
+                "--port",
+                "19050"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "MODEL": "hf-tool-llama3.2-3b-32k",
+                "MODEL_URL": "http://0.0.0.0:11434/",
+            },
+            "jinja": true,
+            "justMyCode": false,
+        },
+        {
             "name": "Python Debugger: Current File with Arguments",
             "type": "debugpy",
             "request": "launch",
@@ -12,12 +87,76 @@
             "console": "integratedTerminal",
             // "args": "${command:pickArgs}"
             "env": {
-                "LLM_PROVIDER": "Ollama",
-                "LLM_MODEL": "devstral:24b",
-                "LLM_BASE_URL": "http://localhost:11434",
-                "LLM_TEMPERATURE": "0.0",
-                "EXA_API_KEY": "4b009399-5ab5-487b-8d7c-37b19fa3a4aa",
-            }
+                "PYTHONPATH": ".",
+            //     "LLM_PROVIDER": "Ollama",
+            //     "LLM_MODEL": "devstral:24b",
+            //     "LLM_BASE_URL": "http://localhost:11434",
+            //     "LLM_TEMPERATURE": "0.0",
+            //     "EXA_API_KEY": "4b009399-5ab5-487b-8d7c-37b19fa3a4aa",
+            },
+            "justMyCode": false,
+        },
+        {
+            "name": "Python Debugger: fastMCP",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/src/main.py",
+            "args": [
+                "--transport",
+                "http",
+                "--port",
+                "19050"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "MODEL": "hf-tool-llama3.2-3b-32k",
+                "MODEL_URL": "http://0.0.0.0:11434/"
+            },
+            "jinja": true,
+            "justMyCode": false,
+        },
+        {
+            "name": "uvicorn fastMCP sht call fastapi dev",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uv",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false,
+            "args": [
+                "run",
+                "uvicorn",
+                "src.main:main",
+                "--reload",
+                "--transport",
+                "http",
+                "--port",
+                "19000"
+            ],
+            "env": {
+                "db_username": "postgres",
+                "db_password": "secret",
+                "host_server": "localhost",
+                "database_name": "fastapi",
+                "ssl_mode": "prefer",
+                "db_server_port": "5432"
+            },
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "uv pytest debug",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uv",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "run",
+                "pytest",
+                // "tests/test_main.py"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            // "preLaunchTask": "uv-sync"
         }
     ]
 }

@@ -1,10 +1,10 @@
 # Sequential Thinking Multi-Agent System (MAS) ![](https://img.shields.io/badge/A%20FRAD%20PRODUCT-WIP-yellow)
 
-[![smithery badge](https://smithery.ai/badge/@FradSer/mcp-server-mas-sequential-thinking)](https://smithery.ai/server/@FradSer/mcp-server-mas-sequential-thinking) [![Twitter Follow](https://img.shields.io/twitter/follow/FradSer?style=social)](https://twitter.com/FradSer) [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Framework](https://img.shields.io/badge/Framework-Agno-orange.svg)](https://github.com/cognitivecomputations/agno)
+Inspirated by github.com:FradSer/hf-mcp-sequential-thinking.git
 
-English | [简体中文](README.zh-CN.md)
+[![smithery badge](https://smithery.ai/badge/TODO)](https://smithery.ai/server/@TODO/sequential-thinking) [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Framework](https://img.shields.io/badge/pydantic--ai-<color>?logo=pydantic&logoColor=white)](https://github.com/pydantic/pydantic-ai)
 
-This project implements an advanced sequential thinking process using a **Multi-Agent System (MAS)** built with the **Agno** framework and served via **MCP**. It represents a significant evolution from simpler state-tracking approaches by leveraging coordinated, specialized agents for deeper analysis and problem decomposition.
+This project implements an advanced sequential thinking process using a **Multi-Agent System (MAS)** built with the **Pydantic-ai** framework and served via **FastMCP**. It represents a significant evolution from simpler state-tracking approaches by leveraging coordinated, specialized agents for deeper analysis and problem decomposition.
 
 ## Overview
 
@@ -63,10 +63,11 @@ This parallel processing leads to substantially higher token usage (potentially 
 ## Prerequisites
 
 - Python 3.10+
-- Access to a compatible LLM API (configured for `agno`). The system currently supports:
+- Access to a compatible LLM API. The system currently supports:
     - **Groq:** Requires `GROQ_API_KEY`.
     - **DeepSeek:** Requires `DEEPSEEK_API_KEY`.
     - **OpenRouter:** Requires `OPENROUTER_API_KEY`.
+    - **Ollama** The most important to run loccaly and in all confidentiality.
     - Configure the desired provider using the `LLM_PROVIDER` environment variable (defaults to `deepseek`).
 - Exa API Key (required only if using the Researcher agent's capabilities)
     - Set via the `EXA_API_KEY` environment variable.
@@ -74,35 +75,40 @@ This parallel processing leads to substantially higher token usage (potentially 
 
 ## MCP Server Configuration (Client-Side)
 
-This server runs as a standard executable script that communicates via stdio, as expected by MCP. The exact configuration method depends on your specific MCP client implementation. Consult your client's documentation for details on integrating external tool servers.
+This server runs as a standard executable script that communicates via stdio or sse or http, as expected by FastMCP. The exact configuration method depends on your specific MCP client implementation. Consult your client's documentation for details on integrating external tool servers.
 
 The `env` section within your MCP client configuration should include the API key for your chosen `LLM_PROVIDER`.
 
 ```json
 {
-  "mcpServers": {
-      "mas-sequential-thinking": {
-         "command": "uvx", // Or "python", "path/to/venv/bin/python" etc.
-         "args": [
-            "mcp-server-mas-sequential-thinking" // Or the path to your main script, e.g., "main.py"
-         ],
-         "env": {
+    "hf-mas-sequential-thinking": {
+        "timeout": 60,
+        "command": "uv",
+        "args": [
+            "--directory=/home/a/repositories/ia/others/hf-mcpo-mas-sequential-thinking",
+            "run",
+            "main.py"
+        ],
+        "transportType": "stdio",
+        "alwaysAllow": [],
+        "env": {
             "LLM_PROVIDER": "ollama", // "deepseek" Or "groq", "openrouter"
             // "GROQ_API_KEY": "your_groq_api_key", // Only if LLM_PROVIDER="groq"
             // "DEEPSEEK_API_KEY": "your_deepseek_api_key", // Default provider
             // "OPENROUTER_API_KEY": "your_openrouter_api_key", // Only if LLM_PROVIDER="openrouter"
             "LLM_BASE_URL": "your_base_url_if_needed", // Optional: If using a custom endpoint for DeepSeek
-            "EXA_API_KEY": "your_exa_api_key" // Only if using Exa
-         }
-      }
-   }
+            "EXA_API_KEY": "your_exa_api_key", // Only if using Exa
+            "MODEL": "hf-tool-llama3.2-3b-32k",
+            "MODEL_URL": "http://0.0.0.0:11434/",
+        }
+    },
 }
 ```
 
 ## Installation & Setup
 
 ### Installing via Smithery
-
+TODO
 To install Sequential Thinking Multi-Agent System for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@FradSer/mcp-server-mas-sequential-thinking):
 
 ```bash
@@ -112,8 +118,8 @@ npx -y @smithery/cli install @FradSer/mcp-server-mas-sequential-thinking --clien
 ### Manual Installation
 1.  **Clone the repository:**
     ```bash
-    git clone git@github.com:FradSer/mcp-server-mas-sequential-thinking.git
-    cd mcp-server-mas-sequential-thinking
+    git clone https://github.com/highfeature/hf-mcp-server-mas-sequential-thinking.git
+    cd hf-mcp-server-mas-sequential-thinking
     ```
 
 2.  **Set Environment Variables:**
@@ -121,7 +127,10 @@ npx -y @smithery/cli install @FradSer/mcp-server-mas-sequential-thinking --clien
     ```dotenv
     # --- LLM Configuration ---
     # Select the LLM provider: "deepseek" (default), "groq", or "openrouter"
-    LLM_PROVIDER="ollama"
+    LLM_PROVIDER=Ollama
+    OLLAMA_TEAM_MODEL_ID=hf-tool-thinking-qween3-14b-32k:latest
+    OLLAMA_AGENT_MODEL_ID=hf-tool-thinking-qween3-14b-32k:latest
+    LOG_FOLDER=/home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs
 
     # Provide the API key for the chosen provider:
     # GROQ_API_KEY="your_groq_api_key"
@@ -144,7 +153,8 @@ npx -y @smithery/cli install @FradSer/mcp-server-mas-sequential-thinking --clien
     # OPENROUTER_AGENT_MODEL_ID="deepseek/deepseek-chat" # Example, adjust as needed
 
     # --- External Tools ---
-    # Required ONLY if the Researcher agent is used and needs Exa
+    WEB_SEARCH_TOOL=DuckDuckGoTools
+    # Required ONLY if the Researcher agent use EXA API
     EXA_API_KEY="your_exa_api_key"
     ```
 
@@ -163,13 +173,11 @@ npx -y @smithery/cli install @FradSer/mcp-server-mas-sequential-thinking --clien
         # source $HOME/.cargo/env # Or restart your shell
 
         # Create and activate a virtual environment (optional but recommended)
-        python -m venv .venv
-        source .venv/bin/activate # On Windows use `.venv\\Scripts\\activate`
+        uv venv --python 3.13
+        uv activate
 
         # Install dependencies
-        uv pip install -r requirements.txt
-        # Or if a pyproject.toml exists with dependencies defined:
-        # uv pip install .
+        uv sync
         ```
     - **Using `pip`:**
         ```bash
@@ -191,49 +199,37 @@ Run the server. Choose one of the following methods:
 
 1.  **Using `uv run` (Recommended):**
     ```bash
+    export PYTHONPATH=.
+    uv run -- python src/main.py --transport http --port 8090
     uv --directory /path/to/mcp-server-mas-sequential-thinking run mcp-server-mas-sequential-thinking
+    uv --directory /home/a/repositories/ia/hf/hf-mcp-sequential-thinking run python src/main.py --transport http --port 19050
     ```
 2.  **Directly using Python:**
 
     ```bash
-    python main.py
+    export PYTHONPATH=.
+    python src/main.py --transport http --port 8090
     ```
 
-The server will start and listen for requests via stdio, making the `sequentialthinking` tool available to compatible MCP clients configured to use it.
+The server will start and listen for requests via stdio or sse or http, making the `sequentialthinking` tool available to compatible MCP clients configured to use it.
 
 ### `sequentialthinking` Tool Parameters
 
 The tool expects arguments matching the `ThoughtData` Pydantic model:
 
 ```python
-# Simplified representation from src/models.py
+# Simplified representation from src/sequential_thinking/models.py
 class ThoughtData(BaseModel):
-    thought: str                 # Content of the current thought/step
-    thoughtNumber: int           # Sequence number (>=1)
-    totalThoughts: int           # Estimated total steps (>=1, suggest >=5)
-    nextThoughtNeeded: bool      # Is another step required after this?
-    isRevision: bool = False     # Is this revising a previous thought?
-    revisesThought: Optional[int] = None # If isRevision, which thought number?
+    thought: str                            # Content of the current thought/step
+    thoughtNumber: int                      # Sequence number (>=1)
+    totalThoughts: int                      # Estimated total steps (>=1, suggest >=5)
+    nextThoughtNeeded: bool                 # Is another step required after this?
+    isRevision: bool = False                # Is this revising a previous thought?
+    revisesThought: Optional[int] = None    # If isRevision, which thought number?
     branchFromThought: Optional[int] = None # If branching, from which thought?
-    branchId: Optional[str] = None # Unique ID for the new branch being created
-    needsMoreThoughts: bool = False # Signal if estimate is too low before last step
+    branchId: Optional[str] = None          # Unique ID for the new branch being created
+    needsMoreThoughts: bool = False         # Signal if estimate is too low before last step
 ```
-
-### Interacting with the Tool (Conceptual Example)
-
-An LLM would interact with this tool iteratively:
-
-1.  **LLM:** Uses a starter prompt (like `sequential-thinking-starter`) with the problem definition.
-2.  **LLM:** Calls `sequentialthinking` tool with `thoughtNumber: 1`, the initial `thought` (e.g., "Plan the analysis..."), an estimated `totalThoughts`, and `nextThoughtNeeded: True`.
-3.  **Server:** MAS processes the thought. The Coordinator synthesizes responses from specialists and provides guidance (e.g., "Analysis plan complete. Suggest researching X next. No revisions recommended yet.").
-4.  **LLM:** Receives the JSON response containing `coordinatorResponse`.
-5.  **LLM:** Formulates the next thought based on the `coordinatorResponse` (e.g., "Research X using available tools...").
-6.  **LLM:** Calls `sequentialthinking` tool with `thoughtNumber: 2`, the new `thought`, potentially updated `totalThoughts`, `nextThoughtNeeded: True`.
-7.  **Server:** MAS processes. The Coordinator synthesizes (e.g., "Research complete. Findings suggest a flaw in thought #1's assumption. RECOMMENDATION: Revise thought #1...").
-8.  **LLM:** Receives the response, notes the recommendation.
-9.  **LLM:** Formulates a revision thought.
-10. **LLM:** Calls `sequentialthinking` tool with `thoughtNumber: 3`, the revision `thought`, `isRevision: True`, `revisesThought: 1`, `nextThoughtNeeded: True`.
-11. **... and so on, potentially branching or extending the process as needed.**
 
 ### Tool Response Format
 
@@ -245,8 +241,8 @@ The tool returns a JSON string containing:
   "estimatedTotalThoughts": int,          // The current estimate of total thoughts
   "nextThoughtNeeded": bool,              // Whether the process indicates more steps are needed
   "coordinatorResponse": "...",           // Synthesized output from the agent team, including analysis, findings, and guidance for the next step.
-  "branches": ["main", "branch-id-1"],  // List of active branch IDs
-  "thoughtHistoryLength": int,          // Total number of thoughts processed so far (across all branches)
+  "branches": ["main", "branch-id-1"],    // List of active branch IDs
+  "thoughtHistoryLength": int,            // Total number of thoughts processed so far (across all branches)
   "branchDetails": {
     "currentBranchId": "main",            // The ID of the branch the processed thought belongs to
     "branchOriginThought": null | int,    // The thought number where the current branch diverged (null for 'main')
@@ -259,7 +255,7 @@ The tool returns a JSON string containing:
   "revisesThought": null | int,           // Which thought number was revised (if isRevision is true)
   "isBranch": bool,                       // Did this thought start a new branch?
   "status": "success | validation_error | failed", // Outcome status
-  "error": null | "Error message..."     // Error details if status is not 'success'
+  "error": null | "Error message..."      // Error details if status is not 'success'
 }
 ```
 
@@ -274,24 +270,26 @@ The tool returns a JSON string containing:
 
 1.  **Clone the repository:** (As in Installation)
     ```bash
-    git clone git@github.com:FradSer/mcp-server-mas-sequential-thinking.git
-    cd mcp-server-mas-sequential-thinking
+    git clone https://github.com/highfeature/hf-mcp-server-mas-sequential-thinking.git
+    cd hf-mcp-server-mas-sequential-thinking
     ```
 2.  **Set up Virtual Environment:** (Recommended)
     ```bash
-    python -m venv .venv
-    source .venv/bin/activate # On Windows use `.venv\\Scripts\\activate`
+    uv venv --python 3.13
+    uv activate
     ```
 3.  **Install Dependencies (including dev):**
     Ensure your `requirements-dev.txt` or `pyproject.toml` specifies development tools (like `pytest`, `ruff`, `black`, `mypy`).
     ```bash
     # Using uv
-    uv pip install -r requirements.txt
-    uv pip install -r requirements-dev.txt # Or install extras if defined in pyproject.toml: uv pip install -e ".[dev]"
+    uv sync
+    # or
+    uv sync --group dev # Or install extras if defined in pyproject.toml: uv pip install -e ".[dev]"
 
     # Using pip
     pip install -r requirements.txt
-    pip install -r requirements-dev.txt # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
+    pip install -r requirements-
+    dev.txt # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
     ```
 4.  **Run Checks:**
     Execute linters, formatters, and tests (adjust commands based on your project setup).
@@ -300,18 +298,78 @@ The tool returns a JSON string containing:
     ruff check . --fix
     black .
     mypy .
-    pytest
+    uv run pytest
     ```
 
-5.  **Testing the Application:**
-6.  Testing: Test your MCP server locally before deploying using MCP Inspector. Please ensure your Dockerfile builds locally first before deploying.
-7.  ```bash
-    npx @modelcontextprotocol/inspector uv run main.py
+5.  **Debug and Testing the Application:**
+    Testing: Test your MCP server locally before deploying using MCP Inspector. Please ensure your Dockerfile builds locally first before deploying.
+    ```bash
+        npx @modelcontextprotocol/inspector uv run scr/main.py
     ```
+    Or for Debug:
+    In VSCodium add in launch.json
+    ```json
+            {
+                "name": "Python Debugger: FastAPI 1",
+                "type": "debugpy",
+                "request": "launch",
+                "module": "uvicorn",
+                "args": [
+                    "src.main:app",
+                    "--reload",
+                    "--port",
+                    "19050"
+                ],
+                "env": {
+                    "MODEL": "hf-tool-llama3.2-3b-32k",
+                    "MODEL_URL": "http://0.0.0.0:11434/"
+                },
+                "jinja": true,
+            },
+    ```
+    ```sh
+        npx @modelcontextprotocol/inspector
+    ```
+    Then, with the token given open the browser
+    ```url
+    http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=<Session token>#resources
+    ```
+    Where you replace Session token with the token given by the npx inspector.
+    In the inspector tab, select Transport type to "Streamble HTTP" and URL with http://127.0.0.1:19050/mcp-server/mcp/, then click "Connect" or "Reconnect".
+
     Open the url http://127.0.0.1:6274/, then click on the "Run" button to test your MCP server locally. Then click on the "Tools" button to see the tools that are available in the MCP server, and verify that the tool "sequentialthinking" is available.
-    Copy "I need to test hf-mcp-server-mas-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
+    Copy "I need to test hf-mcp-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
     The model should return a response with a new thought, a new thought number, a new total thoughts, and Tool Result: Success. If you see this, your MCP server is working correctly.
-8.  **Contribution:**
+
+5. 1 **WIP: Docker and Docker Compose, all with sse support for support kubernetes**
+       <!-- ```sh
+    docker build -t mcp-server-mas-sequential-thinking .
+    ```
+    Make sure you have a .env file in the root of your project with the necessary environment variables.
+    ```.env
+    LLM_PROVIDER=Ollama
+    LLM_MODEL=the_model_name
+    EXA_API_KEY=your-exa-api-key
+    ```
+    Then run the following command to test everything is fine
+    ```sh
+    docker run -i --rm --env-file .env mcp-server-mas-sequential-thinking:latest
+    ```
+    Then
+    ```sh
+    docker compose up -d
+    ``` -->
+    To run the project using Docker compose, follow these steps:
+    ```sh
+    mkdir -p /home/a/docker-data/MCP/hf-mcp-sequential-thinking
+    ln -s /home/a/.sequential_thinking/logs /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs
+    cp pyproject.toml /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
+    cp main.py /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
+    cp .env /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
+    docker compose up --build
+    ```
+    
+6.  **Contribution:**
     (Consider adding contribution guidelines: branching strategy, pull request process, code style).
 
 ## License
@@ -320,6 +378,17 @@ MIT
 
 ## Release Notes
 
+### 0.5.0
+    - Replace Agno Framework by Pydandic-ai. 
+    - Refactor the server
+    - Refactor the logging system.
+    - Updated dependencies
+
+### 0.4.0
+    - Added support for DuckDuckGoTools in Researcher agents, to make a web search Without API key. 
+    - Updated dependencies
+
 ### 0.3.0
     - Added support for Ollama FULL LOCAL (no API key needed, but requires Ollama installed and running locally)
     - Updated dependencies
+  
