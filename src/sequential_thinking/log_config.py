@@ -74,7 +74,6 @@ LOGGING_CONFIG = {
                 # "console"
             ],
             "level": "INFO",
-            "propagate": True,
         },
         "uvicorn.error": {
             "handlers": [
@@ -82,15 +81,14 @@ LOGGING_CONFIG = {
                 # "console"
             ],
             "level": "INFO",
-            # "propagate": True,
+            "propagate": False,
         },
         "uvicorn.access": {
             "handlers": [
                 "file_access",
-                # "console"
+                "console"
             ],
             "level": "INFO",
-            # "propagate": True,
         },
         "fastapi": {
             "handlers": [
