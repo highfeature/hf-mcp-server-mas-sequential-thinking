@@ -8,7 +8,7 @@ from typing import AsyncIterator, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 from pydantic import ValidationError
 from starlette.concurrency import iterate_in_threadpool
@@ -68,38 +68,8 @@ class AppContext:
 app_context: Optional[AppContext] = None
 
 
-@asynccontextmanager
-# @log_cancellation
-async def app_lifespan() -> AsyncIterator[None]:
-    """Manages the application lifecycle."""
-    global app_context
-    settings.logger_fastapi.info(
-        "Initializing application resources (Coordinate Mode)..."
-    )
-    try:
-        team = create_sequential_thinking_team()
-        app_context = AppContext(team=team)
-        provider = settings.LLM_PROVIDER
-        settings.logger_fastapi.info(
-            f"Pydantic team initialized in coordinate mode using provider: {provider}."
-        )
-    except Exception as e:
-        settings.logger_fastapi.critical(
-            f"Failed to initialize Pydantic team during lifespan setup: {e}",
-            exc_info=True,
-        )
-        raise e
-
-    try:
-        yield
-    finally:
-        settings.logger_fastapi.info("Shutting down application resources...")
-        app_context = None
-
-
 # Initialize FastMCP =========================================
 mcp = FastMCP("HighfeatureMcpServerSequentialThinking")
-
 # --- MCP Handlers ---
 
 
@@ -385,17 +355,67 @@ async def sequentialthinking(
 
 
 # Mount the MCP app as a sub-application
-mcp_app = mcp.http_app()
+mcp_app = mcp.streamable_http_app()
 
 # Initialize FastAPI =========================================
+@asynccontextmanager
+# @log_cancellation
+async def app_lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Manages the application lifecycle."""
+    global app_context
+    settings.logger_fastapi.info(f"Application starting on port {settings.PORT}")
+    settings.logger_fastapi.info(
+        "Initializing application resources (Coordinate Mode)..."
+    )
+    try:
+        team = create_sequential_thinking_team()
+        app_context = AppContext(team=team)
+        provider = settings.LLM_PROVIDER
+        settings.logger_fastapi.info(
+            f"Pydantic team initialized in coordinate mode using provider: {provider}."
+        )
+    except Exception as e:
+        settings.logger_fastapi.critical(
+            f"Failed to initialize Pydantic team during lifespan setup: {e}",
+            exc_info=True,
+        )
+        raise e
+
+    try:
+        # Start the MCP server
+        async with mcp.session_manager.run():
+            yield
+       
+        # yield
+    finally:
+        settings.logger_fastapi.info("Shutting down application resources...")
+        app_context = None
+
+
 
 app = FastAPI(
     title="hf-mcp-sequential-thinking",
     version="1.0.0",
     description="Leverages an LLM to sequential thinking",
-    lifespan=mcp_app.router.lifespan_context,
-    openapi_url="/mcp-server/openapi.json",
+    lifespan=app_lifespan,
+    openapi_url="/mcp/openapi.json",
 )
+
+# Add CORS middleware to the main FastAPI app
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_methods=["GET", "POST", "DELETE"],  # MCP streamable HTTP methods
+    allow_headers=[
+        "mcp-protocol-version",
+        "mcp-session-id",
+        "Authorization",
+        "Content-Type",
+    ],
+    expose_headers=["Mcp-Session-Id"],  # Critical for session handling
+)
+
 
 # Mount the FastMCP app to the FastAPI app
 app.mount("/mcp-server", mcp_app, "mcp")
@@ -463,52 +483,3 @@ async def root() -> dict[str, str]:
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy"}
-
-
-# --- Main Execution ---
-# def main():
-#     print(os.getcwd())
-
-#     parser = argparse.ArgumentParser(description="Run the hf-context7 MCP server")
-#     parser.add_argument("--transport", choices=["stdio", "http", "sse"], required=False,
-#                         help="Transport to use for communication", default="http")
-#     parser.add_argument("--port", type=int, default=8090,
-#                         help="Port number for HTTP transport")
-
-#     args = parser.parse_args()
-
-#     selected_provider = settings.LLM_PROVIDER
-#     settings.logger_fastapi.info(f"Using provider: {selected_provider}")
-#     settings.logger_fastapi.info(f"Initializing Sequential Thinking Server (Coordinate Mode) with Provider: {selected_provider}...")
-
-#     global app_context
-#     if not app_context:
-#         settings.logger_fastapi.info("Initializing application resources directly (Coordinate Mode)...")
-#         try:
-#             team = create_sequential_thinking_team()
-#             app_context = AppContext(team=team)
-#             settings.logger_fastapi.info(f"Pydantic team initialized directly in coordinate mode using provider: {selected_provider}.")
-#         except Exception as e:
-#             settings.logger_fastapi.critical(f"Failed to initialize Pydantic team: {e}", exc_info=True)
-#             raise
-
-#     try:
-#         settings.logger_fastapi.info("Sequential Thinking MCP Server running on stdio (Coordinate Mode)")
-#         if not app_context:
-#             settings.logger_fastapi.critical("FATAL: Application context not initialized before run.")
-#             raise Exception("Application context not initialized")
-
-#         if args.transport == "stdio":
-#             mcp.run(transport="stdio", host="127.0.0.1", port=args.port, path="/mcp/")
-#         elif args.transport == "sse":
-#             app = mcp.sse_app("/sse/")
-#             mcp.run(transport="sse", host="127.0.0.1", port=args.port, path="/sse/")
-#         elif args.transport == "http":
-#             app = mcp.http_app("/mcp/")
-#             mcp.run(transport="streamable-http", host="127.0.0.1", port=args.port, path="/mcp/")
-#     finally:
-#         settings.logger_fastapi.info("Shutting down application resources...")
-#         app_context = None
-
-# if __name__ == "__main__":
-#     main()
