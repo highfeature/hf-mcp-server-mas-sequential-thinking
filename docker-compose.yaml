@@ -1,18 +1,20 @@
 ---
 
 services:
-  mcpo:
-    # image: hf-mcpo-mas-sequential-thinking:latest
+  server:
     build: .
     ports:
-      - "19110:8000"
+      - "19110:8090"
     env_file:
       - .env
     volumes:
+      # - ./src:/app/src
+      # - ./.env:/app/.env
+      # - ./logs:/app/logs
       - /home/a/docker-data/MCP/hf-mcp-sequential-thinking:/app
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://0.0.0.0:8000/docs || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://0.0.0.0:8090/health-check || exit 1"]
       interval: 30s
       timeout: 3s
       retries: 3
