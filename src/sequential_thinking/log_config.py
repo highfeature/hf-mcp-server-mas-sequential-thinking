@@ -1,4 +1,5 @@
 from src.sequential_thinking.sensitive_data_filter import SensitiveDataFilter
+from src.sequential_thinking.settings import settings
 
 LOGGING_CONFIG = {
     "version": 1,
@@ -33,21 +34,21 @@ LOGGING_CONFIG = {
         "file_sequential_thinking": {
             "formatter": "formatter_simple",
             "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
+            "level": "DEBUG" if settings.DEBUG else "INFO",
             "filename": "sequential_thinking.log",
             "mode": "a",
         },
         "file_access": {
             "formatter": "formatter_simple",
             "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
+            "level": "DEBUG" if settings.DEBUG else "INFO",
             "filename": "sequential_thinking_access.log",
             "mode": "a",
         },
         "file_errors": {
             "formatter": "formatter_detailed",
             "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
+            "level": "DEBUG" if settings.DEBUG else "INFO",
             "filename": "sequential_thinking_errors.log",
             "mode": "a",
         },
