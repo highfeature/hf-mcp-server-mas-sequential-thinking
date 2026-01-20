@@ -109,17 +109,17 @@ The `env` section within your MCP client configuration should include the API ke
 
 ### Installing via Smithery
 TODO
-To install Sequential Thinking Multi-Agent System for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@FradSer/mcp-server-mas-sequential-thinking):
+To install Sequential Thinking Multi-Agent System for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@FradSer/mcp-server-sequential-thinking):
 
 ```bash
-npx -y @smithery/cli install @FradSer/mcp-server-mas-sequential-thinking --client claude
+npx -y @smithery/cli install @FradSer/mcp-server-sequential-thinking --client claude
 ```
 
 ### Manual Installation
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/highfeature/hf-mcp-server-mas-sequential-thinking.git
-    cd hf-mcp-server-mas-sequential-thinking
+    git clone https://github.com/highfeature/hf-mcp-server-sequential-thinking.git
+    cd hf-mcp-server-sequential-thinking
     ```
 
 2.  **Set Environment Variables:**
@@ -199,14 +199,16 @@ Run the server. Choose one of the following methods:
 
 1.  **Using `uv run` (Recommended):**
     ```bash
-    export PYTHONPATH=.
-    uv run -- python src/main.py --transport http --port 8090
-    uv --directory /path/to/mcp-server-mas-sequential-thinking run mcp-server-mas-sequential-thinking
+    export PYTHONPATH=.; uv run uvicorn src.main:app --reload --env-file .env --port=8090 --log-level debug
+    # Or (TODO: check if true after the major update)
+    uv --directory /path/to/mcp-server-sequential-thinking run mcp-server-sequential-thinking
+    # Or but need to uncomment the main function in main.py  (TODO: check if steel true)
     uv --directory /home/a/repositories/ia/hf/hf-mcp-sequential-thinking run python src/main.py --transport http --port 19050
     ```
 2.  **Directly using Python:**
 
     ```bash
+    # Or but need to uncomment the main function in main.py  (TODO: check if true after the major update)
     export PYTHONPATH=.
     python src/main.py --transport http --port 8090
     ```
@@ -261,7 +263,7 @@ The tool returns a JSON string containing:
 
 ## Logging
 
-- Logs are written to `~/.sequential_thinking/logs/sequential_thinking.log` by default. (Configuration might be adjustable in the logging setup code).
+- Logs are written to `./sequential_thinking.log`, `./sequential_thinking_access.log` and `./sequential_thinking_error.log` by default. (Configuration might be adjustable in the logging setup code).
 - Uses Python's standard `logging` module.
 - Includes a rotating file handler (e.g., 10MB limit, 5 backups) and a console handler (typically INFO level).
 - Logs include timestamps, levels, logger names, and messages, including structured representations of thoughts being processed.
@@ -270,8 +272,8 @@ The tool returns a JSON string containing:
 
 1.  **Clone the repository:** (As in Installation)
     ```bash
-    git clone https://github.com/highfeature/hf-mcp-server-mas-sequential-thinking.git
-    cd hf-mcp-server-mas-sequential-thinking
+    git clone https://github.com/highfeature/hf-mcp-server-sequential-thinking.git
+    cd hf-mcp-server-sequential-thinking
     ```
 2.  **Set up Virtual Environment:** (Recommended)
     ```bash
@@ -284,12 +286,12 @@ The tool returns a JSON string containing:
     # Using uv
     uv sync
     # or
-    uv sync --group dev # Or install extras if defined in pyproject.toml: uv pip install -e ".[dev]"
+    uv sync --group dev # Or install extras if defined in pyproject.toml
 
     # Using pip
     pip install -r requirements.txt
-    pip install -r requirements-
-    dev.txt # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
+    # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
+    pip install -r requirements-dev.txt 
     ```
 4.  **Run Checks:**
     Execute linters, formatters, and tests (adjust commands based on your project setup).
@@ -303,6 +305,12 @@ The tool returns a JSON string containing:
 
 5.  **Debug and Testing the Application:**
     Testing: Test your MCP server locally before deploying using MCP Inspector. Please ensure your Dockerfile builds locally first before deploying.
+
+    For simple run
+    ```bash
+    cd /home/a/repositories/ia/hf/hf-mcp-sequential-thinking && uv run uvicorn src.main:app --reload --env-file .env --port=8090 --log-level debug
+    ```
+    For debug with MCP inspector
     ```bash
         npx @modelcontextprotocol/inspector uv run scr/main.py
     ```
@@ -318,7 +326,7 @@ The tool returns a JSON string containing:
                     "src.main:app",
                     "--reload",
                     "--port",
-                    "19050"
+                    "19110"
                 ],
                 "env": {
                     "MODEL": "hf-tool-llama3.2-3b-32k",
@@ -335,40 +343,57 @@ The tool returns a JSON string containing:
     http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=<Session token>#resources
     ```
     Where you replace Session token with the token given by the npx inspector.
-    In the inspector tab, select Transport type to "Streamble HTTP" and URL with http://127.0.0.1:19050/mcp-server/mcp/, then click "Connect" or "Reconnect".
+    In the inspector tab, select Transport type to "Streamble HTTP" and URL with http://127.0.0.1:19110/mcp-server/mcp/ or  http://localhost:19110/mcp-server/mcp/, then click "Connect" or "Reconnect".
 
     Open the url http://127.0.0.1:6274/, then click on the "Run" button to test your MCP server locally. Then click on the "Tools" button to see the tools that are available in the MCP server, and verify that the tool "sequentialthinking" is available.
     Copy "I need to test hf-mcp-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
     The model should return a response with a new thought, a new thought number, a new total thoughts, and Tool Result: Success. If you see this, your MCP server is working correctly.
 
-5. 1 **WIP: Docker and Docker Compose, all with sse support for support kubernetes**
-       <!-- ```sh
-    docker build -t mcp-server-mas-sequential-thinking .
+5.1 **Docker and Docker Compose, all with http-stream support for support kubernetes**
+    ```sh
+    docker build -t hf-mcp-sequential-thinking .
     ```
     Make sure you have a .env file in the root of your project with the necessary environment variables.
     ```.env
-    LLM_PROVIDER=Ollama
-    LLM_MODEL=the_model_name
-    EXA_API_KEY=your-exa-api-key
+    EXA_API_KEY=your-exa-api-key # if you use EXA_API
+    WEB_SEARCH_TOOL=DuckDuckGoTools
+    DEBUG=True
+    DEBUG_AGENTS=True
+    LOG_FOLDER=logs
+    PORT=8090
+    LLM_PROVIDER=ollama
+    OLLAMA_TEAM_MODEL_ID=hf-tool-thinking-qween3-14b-32k:latest
+    OLLAMA_AGENT_MODEL_ID=hf-tool-thinking-qween3-14b-32k:latest
+    # DEEPSEEK_TEAM_MODEL_ID=deepseek-chat
+    # DEEPSEEK_AGENT_MODEL_ID=deepseek-chat
+    # GROQ_TEAM_MODEL_ID=deepseek-r1-distill-llama-70b
+    # GROQ_AGENT_MODEL_ID=qwen-2.5-32b
+    # OPENROUTER_TEAM_MODEL_ID=deepseek/deepseek-chat-v3-0324
+    # OPENROUTER_AGENT_MODEL_ID=deepseek/deepseek-r1
     ```
     Then run the following command to test everything is fine
     ```sh
-    docker run -i --rm --env-file .env mcp-server-mas-sequential-thinking:latest
+    docker run -i --rm -v /home/a/docker-data/MCP/hf-mcp-sequential-thinking:/app -p 19110:8000 --env-file .env hf-mcp-sequential-thinking:latest
     ```
     Then
     ```sh
     docker compose up -d
-    ``` -->
+    ```
     To run the project using Docker compose, follow these steps:
     ```sh
     mkdir -p /home/a/docker-data/MCP/hf-mcp-sequential-thinking
     ln -s /home/a/.sequential_thinking/logs /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs
     cp pyproject.toml /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
-    cp main.py /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
+    cp -r src /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
     cp .env /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
-    docker compose up --build
+    docker compose up -d --build
     ```
-    
+
+5.2 **Debug with Docker**
+    ```sh
+    export PYTHONPATH=.; uv run uvicorn src.main:app --reload --env-file .env --port=8090 --log-level debug 
+    ```
+
 6.  **Contribution:**
     (Consider adding contribution guidelines: branching strategy, pull request process, code style).
 
