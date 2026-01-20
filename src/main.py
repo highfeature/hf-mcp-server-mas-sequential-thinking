@@ -357,6 +357,7 @@ async def sequentialthinking(
 # Mount the MCP app as a sub-application
 mcp_app = mcp.streamable_http_app()
 
+
 # Initialize FastAPI =========================================
 @asynccontextmanager
 # @log_cancellation
@@ -385,12 +386,11 @@ async def app_lifespan(app: FastAPI) -> AsyncIterator[None]:
         # Start the MCP server
         async with mcp.session_manager.run():
             yield
-       
+
         # yield
     finally:
         settings.logger_fastapi.info("Shutting down application resources...")
         app_context = None
-
 
 
 app = FastAPI(
