@@ -35,7 +35,7 @@ LOGGING_CONFIG = {
             "formatter": "formatter_simple",
             "class": "logging.handlers.RotatingFileHandler",
             "level": "DEBUG" if settings.DEBUG else "INFO",
-            "filename": "sequential_thinking.log",
+            "filename": f"{settings.LOG_FOLDER}/sequential_thinking.log",
             "mode": "a",
             'maxBytes': 10485760,  # 10 MB
             'backupCount': 5,
@@ -44,7 +44,7 @@ LOGGING_CONFIG = {
             "formatter": "formatter_simple",
             "class": "logging.handlers.RotatingFileHandler",
             "level": "DEBUG" if settings.DEBUG else "INFO",
-            "filename": "sequential_thinking_access.log",
+            "filename": f"{settings.LOG_FOLDER}/sequential_thinking_access.log",
             "mode": "a",
             'maxBytes': 10485760,  # 10 MB
             'backupCount': 5,
@@ -53,7 +53,7 @@ LOGGING_CONFIG = {
             "formatter": "formatter_detailed",
             "class": "logging.handlers.RotatingFileHandler",
             "level": "DEBUG" if settings.DEBUG else "INFO",
-            "filename": "sequential_thinking_errors.log",
+            "filename": f"{settings.LOG_FOLDER}/sequential_thinking_errors.log",
             "mode": "a",
             'maxBytes': 10485760,  # 10 MB
             'backupCount': 5,
