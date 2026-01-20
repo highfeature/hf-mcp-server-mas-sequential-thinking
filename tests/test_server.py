@@ -40,7 +40,7 @@ async def test_fastapi_health():
 # fastAPI tests
 @pytest.mark.asyncio
 async def test_fastapi_openapi_json_get():
-    response = tclient.get("/mcp-server/openapi.json")
+    response = tclient.get("/mcp/openapi.json")
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
     assert "openapi" in response.json()
