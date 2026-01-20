@@ -37,6 +37,8 @@ LOGGING_CONFIG = {
             "level": "DEBUG" if settings.DEBUG else "INFO",
             "filename": "sequential_thinking.log",
             "mode": "a",
+            'maxBytes': 10485760,  # 10 MB
+            'backupCount': 5,
         },
         "file_access": {
             "formatter": "formatter_simple",
@@ -44,6 +46,8 @@ LOGGING_CONFIG = {
             "level": "DEBUG" if settings.DEBUG else "INFO",
             "filename": "sequential_thinking_access.log",
             "mode": "a",
+            'maxBytes': 10485760,  # 10 MB
+            'backupCount': 5,
         },
         "file_errors": {
             "formatter": "formatter_detailed",
@@ -51,6 +55,8 @@ LOGGING_CONFIG = {
             "level": "DEBUG" if settings.DEBUG else "INFO",
             "filename": "sequential_thinking_errors.log",
             "mode": "a",
+            'maxBytes': 10485760,  # 10 MB
+            'backupCount': 5,
         },
     },
     "loggers": {
