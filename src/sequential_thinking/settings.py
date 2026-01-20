@@ -5,8 +5,8 @@ class Settings:
     PORT = int(os.getenv("PORT", 8090))
     logger_fastapi = None
     logger_team = None
-    DEBUG=True if os.environ.get("DEBUG", "False") == "True" else False
-    DEBUG_AGENTS=True if os.environ.get("DEBUG_AGENTS", "False") == "True" else False
+    DEBUG = True if os.environ.get("DEBUG", "False") == "True" else False
+    DEBUG_AGENTS = True if os.environ.get("DEBUG_AGENTS", "False") == "True" else False
     LOG_FOLDER = os.environ.get("LOG_FOLDER", "./hf-mcp-sequential-thinking/logs")
     WEB_SEARCH_TOOL = os.environ.get("WEB_SEARCH_TOOL", "DuckDuckGoTools")
     # provider
