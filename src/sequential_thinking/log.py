@@ -24,7 +24,7 @@ def log_request(request: Request):
         body=request_info.body,
         headers=request_info.headers,
     )
-    settings.logger_fastapi.info(request_log.dict())
+    settings.logger_fastapi.info(request_log.model_dump())
 
 
 def log_error(uuid: str, response_body: dict):
@@ -32,7 +32,7 @@ def log_error(uuid: str, response_body: dict):
         req_id=uuid,
         error_message=response_body["error_message"],
     )
-    settings.logger_fastapi.error(error_log.dict())
+    settings.logger_fastapi.error(error_log.model_dump())
     settings.logger_fastapi.error(traceback.format_exc())
 
 
@@ -88,57 +88,11 @@ class ErrorLog(BaseModel):
 def setup_logging():
     """
     Set up application logging with both file and console handlers.
-    Logs will be stored in the user's home directory under .sequential_thinking/logs.
-
-    Returns:
-        Logger instance configured with both handlers.
     """
     logging.config.dictConfig(LOGGING_CONFIG)
 
     settings.logger_fastapi = logging.getLogger("fastapi")
     settings.logger_team = logging.getLogger("team")
-    # settings.logger_agent = logging.getLogger("logger_agent_logger")
-    # logging.config.fileConfig('logging.ini', disable_existing_loggers=False)
-
-    # # Create logs directory in user's home
-    # log_dir = Path(settings.LOG_FOLDER)
-    # log_dir.mkdir(parents=True, exist_ok=True)
-    # log_level = logging.DEBUG if settings.DEBUG else logging.INFO
-
-    # # Create logger
-    # settings.logger = logging.getLogger("sequential_thinking")
-    # settings.logger.setLevel(log_level)
-
-    # # Log format
-    # formatter = logging.Formatter(
-    #     '%(asctime)s - %(levelname)s - [%(name)s] - %(message)s',
-    #     datefmt='%Y-%m-%d %H:%M:%S'
-    # )
-
-    # # File handler with rotation
-    # file_handler = logging.handlers.RotatingFileHandler(
-    #     log_dir / "sequential_thinking.log",
-    #     maxBytes=10*1024*1024,  # 10MB
-    #     backupCount=5,
-    #     encoding='utf-8'
-    # )
-    # file_handler.setLevel(log_level)
-    # file_handler.setFormatter(formatter)
-
-    # # Console handler
-    # console_handler = logging.StreamHandler(sys.stderr)
-    # console_handler.setLevel(log_level)
-    # console_handler.setFormatter(formatter)
-
-    # # Add handlers to logger
-    # settings.logger.addHandler(file_handler)
-    # settings.logger.addHandler(console_handler)
-
-    # # add submodules
-    # agent_logger.propagate = True
-    # agent_logger.addHandler(file_handler)
-    # team_logger.propagate = True
-    # team_logger.addHandler(file_handler)
 
 
 # --- Utility for Formatting Thoughts (for Logging) ---
