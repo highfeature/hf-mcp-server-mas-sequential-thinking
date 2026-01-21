@@ -1,8 +1,8 @@
-# Sequential Thinking Multi-Agent System (MAS) ![](https://img.shields.io/badge/A%20FRAD%20PRODUCT-WIP-yellow)
+# Sequential Thinking Multi-Agent System (MAS)
 
 Inspirated by github.com:FradSer/hf-mcp-sequential-thinking.git
 
-[![smithery badge](https://smithery.ai/badge/TODO)](https://smithery.ai/server/@TODO/sequential-thinking) [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Framework](https://img.shields.io/badge/pydantic--ai-<color>?logo=pydantic&logoColor=white)](https://github.com/pydantic/pydantic-ai)
+[Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Framework](https://img.shields.io/badge/pydantic--ai-<color>?logo=pydantic&logoColor=white)](https://github.com/pydantic/pydantic-ai)
 
 This project implements an advanced sequential thinking process using a **Multi-Agent System (MAS)** built with the **Pydantic-ai** framework and served via **FastMCP**. It represents a significant evolution from simpler state-tracking approaches by leveraging coordinated, specialized agents for deeper analysis and problem decomposition.
 
@@ -343,7 +343,7 @@ The tool returns a JSON string containing:
     http://localhost:6274/?MCP_PROXY_AUTH_TOKEN=<Session token>#resources
     ```
     Where you replace Session token with the token given by the npx inspector.
-    In the inspector tab, select Transport type to "Streamble HTTP" and URL with http://127.0.0.1:19110/mcp-server/mcp/ or  http://localhost:19110/mcp-server/mcp/, then click "Connect" or "Reconnect".
+    In the inspector tab, select Transport type to "Streamable HTTP" and URL with http://127.0.0.1:19110/mcp-server/mcp/ or  http://localhost:19110/mcp-server/mcp/, then click "Connect" or "Reconnect".
 
     Open the url http://127.0.0.1:6274/, then click on the "Run" button to test your MCP server locally. Then click on the "Tools" button to see the tools that are available in the MCP server, and verify that the tool "sequentialthinking" is available.
     Copy "I need to test hf-mcp-sequential-thinking, I just hope mcp inspector will help me" in the "thought" field, "1" in the "thoughtNumber"and in the "totalThoughts" field, and check the "nextThoughtNeeded" checkbox. Then click on the "Run Tool" button to test your MCP server locally.
@@ -387,6 +387,18 @@ The tool returns a JSON string containing:
     cp -r src /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
     cp .env /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
     docker compose up -d --build
+    ```
+    Now to check everything work fine
+    In your browser open:
+    ```browser
+    # FastAPI home
+    http://127.0.0.1:19110/
+    # FastAPI healfcheck
+    http://127.0.0.1:19110/health-check
+    # FastAPI MCP openapi.json
+    http://127.0.0.1:19110/mcp/openapi.json
+    # FastAPI home
+    http://127.0.0.1:19110/docs#/
     ```
 
 5.2 **Use it in VSCodium and other**
