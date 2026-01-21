@@ -2,7 +2,7 @@
 
 Inspirated by github.com:FradSer/hf-mcp-sequential-thinking.git
 
-[Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Framework](https://img.shields.io/badge/pydantic--ai-<color>?logo=pydantic&logoColor=white)](https://github.com/pydantic/pydantic-ai)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/) [![Framework](https://img.shields.io/badge/pydantic--ai-<color>?logo=pydantic&logoColor=white)](https://github.com/pydantic/pydantic-ai)
 
 This project implements an advanced sequential thinking process using a **Multi-Agent System (MAS)** built with the **Pydantic-ai** framework and served via **FastMCP**. It represents a significant evolution from simpler state-tracking approaches by leveraging coordinated, specialized agents for deeper analysis and problem decomposition.
 
