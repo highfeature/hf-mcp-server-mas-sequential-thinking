@@ -389,9 +389,21 @@ The tool returns a JSON string containing:
     docker compose up -d --build
     ```
 
-5.2 **Debug with Docker**
-    ```sh
-    export PYTHONPATH=.; uv run uvicorn src.main:app --reload --env-file .env --port=8090 --log-level debug 
+5.2 **Use it in VSCodium and other**
+    ```mcp_settings.json
+    {
+        "mcpServers": {
+            ...
+            "hf-mcp-sequential-thinking": {
+                    "disabled": false,
+                    "type": "streamable-http",
+                    "url": "http://localhost:19110/mcp-server/mcp/",
+                    "note": "For Streamable HTTP connections, add this URL directly in your MCP Client",
+                    "alwaysAllow": []
+            },
+            ...
+        }
+    }
     ```
 
 6.  **Contribution:**
