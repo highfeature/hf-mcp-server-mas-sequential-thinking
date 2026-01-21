@@ -7,7 +7,7 @@ class Settings:
     logger_team = None
     DEBUG = True if os.environ.get("DEBUG", "False") == "True" else False
     DEBUG_AGENTS = True if os.environ.get("DEBUG_AGENTS", "False") == "True" else False
-    LOG_FOLDER = os.environ.get("LOG_FOLDER", "./hf-mcp-sequential-thinking/logs")
+    LOG_FOLDER = os.environ.get("LOG_FOLDER", "logs")
     WEB_SEARCH_TOOL = os.environ.get("WEB_SEARCH_TOOL", "DuckDuckGoTools")
     # provider
     LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama").lower()
