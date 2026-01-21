@@ -22,19 +22,19 @@ The goal is to achieve a higher quality of analysis and a more nuanced thinking 
 
 ## Key Differences from Original Version (TypeScript)
 
-This Python/Agno implementation marks a fundamental shift from the original TypeScript version:
+This Python/Pydantic-ai implementation marks a fundamental shift from the original TypeScript version:
 
-| Feature/Aspect      | Python/Agno Version (Current)                                        | TypeScript Version (Original)                        |
-| :------------------ | :------------------------------------------------------------------- | :--------------------------------------------------- |
-| **Architecture**    | **Multi-Agent System (MAS)**; Active processing by a team of agents. | **Single Class State Tracker**; Simple logging/storing. |
+| Feature/Aspect      | Python/Pydantic-ai Version (Current)                                       | TypeScript Version (Original)                        |
+| :------------------ |:---------------------------------------------------------------------------| :--------------------------------------------------- |
+| **Architecture**    | **Multi-Agent System (MAS)**; Active processing by a team of agents.       | **Single Class State Tracker**; Simple logging/storing. |
 | **Intelligence**    | **Distributed Agent Logic**; Embedded in specialized agents & Coordinator. | **External LLM Only**; No internal intelligence.     |
-| **Processing**      | **Active Analysis & Synthesis**; Agents *act* on the thought.      | **Passive Logging**; Merely recorded the thought.    |
-| **Frameworks**      | **Agno (MAS) + FastMCP (Server)**; Uses dedicated MAS library.     | **MCP SDK only**.                                    |
-| **Coordination**    | **Explicit Team Coordination Logic** (`Team` in `coordinate` mode).  | **None**; No coordination concept.                   |
-| **Validation**      | **Pydantic Schema Validation**; Robust data validation.            | **Basic Type Checks**; Less reliable.              |
-| **External Tools**  | **Integrated (Exa via Researcher)**; Can perform research tasks.   | **None**.                                            |
-| **Logging**         | **Structured Python Logging (File + Console)**; Configurable.      | **Console Logging with Chalk**; Basic.             |
-| **Language & Ecosystem** | **Python**; Leverages Python AI/ML ecosystem.                    | **TypeScript/Node.js**.                              |
+| **Processing**      | **Active Analysis & Synthesis**; Agents *act* on the thought.              | **Passive Logging**; Merely recorded the thought.    |
+| **Frameworks**      | **Pydantic-ai (MAS) + FastMCP (Server)**; Uses dedicated MAS library.             | **MCP SDK only**.                                    |
+| **Coordination**    | **Explicit Team Coordination Logic** (`Team` in `coordinate` mode).        | **None**; No coordination concept.                   |
+| **Validation**      | **Pydantic Schema Validation**; Robust data validation.                    | **Basic Type Checks**; Less reliable.              |
+| **External Tools**  | **Integrated (Exa via Researcher)**; Can perform research tasks.           | **None**.                                            |
+| **Logging**         | **Structured Python Logging (File + Console)**; Configurable.              | **Console Logging with Chalk**; Basic.             |
+| **Language & Ecosystem** | **Python**; Leverages Python AI/ML ecosystem.                              | **TypeScript/Node.js**.                              |
 
 In essence, the system evolved from a passive thought *recorder* to an active thought *processor* powered by a collaborative team of AI agents.
 
