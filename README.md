@@ -82,14 +82,10 @@ The `env` section within your MCP client configuration should include the API ke
 ```json
 {
     "hf-mas-sequential-thinking": {
-        "timeout": 60,
-        "command": "uv",
-        "args": [
-            "--directory=/home/a/repositories/ia/others/hf-mcpo-mas-sequential-thinking",
-            "run",
-            "main.py"
-        ],
-        "transportType": "stdio",
+        "disabled": false,
+        "type": "streamable-http",
+        "url": "http://localhost:19110/mcp-server/mcp/",
+        "note": "For Streamable HTTP connections, add this URL directly in your MCP Client",
         "alwaysAllow": [],
         "env": {
             "LLM_PROVIDER": "ollama", // "deepseek" Or "groq", "openrouter"
