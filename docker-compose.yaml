@@ -7,7 +7,9 @@
 
 services:
   server:
-    build: .
+    build:
+      context: .
+      target: runtime
     container_name: hf-mcp-sequential-thinking
     ports:
       - "19110:8090"
