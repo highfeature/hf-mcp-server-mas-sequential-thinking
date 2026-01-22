@@ -5,7 +5,6 @@
 # docker build --target base build .
 
 # Stage 1: Build dependencies
-# Based on Python 3.10 (required by pyproject.toml)
 FROM python:3.13-slim AS base
 
 # Set environment variables
@@ -32,8 +31,6 @@ WORKDIR /app
 RUN mkdir -p /app/logs
 
 # Copy project files
-#COPY pyproject.toml uv.lock .env /app/
-#COPY src/ /app/src/
 COPY pyproject.toml uv.lock .env ./
 COPY src/ ./src/
 
@@ -81,4 +78,4 @@ ENV PATH="/root/.local/bin:$PATH"
 EXPOSE 8090
 
 # Run the application
-CMD ["python", "-m", "uv", "run", "--no-dev", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--reload", "--env-file", ".env", "--port=8090", "--log-level", "debug"]
+CMD ["uv", "run", "--no-dev", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--reload", "--env-file", ".env", "--port=8090", "--log-level", "debug"]

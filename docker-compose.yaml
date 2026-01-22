@@ -17,7 +17,7 @@ services:
       - .env
     volumes:
       - hf-mcp-sequential-thinking:/app
-      # - /home/a/docker-data/MCP/hf-mcp-sequential-thinking:/app
+      - /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs:/app/logs
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://0.0.0.0:8090/health-check || exit 1"]

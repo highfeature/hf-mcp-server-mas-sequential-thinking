@@ -428,8 +428,7 @@ MIT
 ## Release Notes
 
 ### 0.6.0
-    - Tranform Dockerfile and docker-compose to multi-stage. 
-    - 
+    - Transform Dockerfile and docker-compose to multi-stage.
 
 ### 0.5.0
     - Replace Agno Framework by Pydandic-ai. 
