@@ -1,17 +1,21 @@
 ---
 
+# Run and Build 
+# docker compose up -d --build
+# Stop
+# docker compose down
+
 services:
   server:
     build: .
+    container_name: hf-mcp-sequential-thinking
     ports:
       - "19110:8090"
     env_file:
       - .env
     volumes:
-      # - ./src:/app/src
-      # - ./.env:/app/.env
-      # - ./logs:/app/logs
-      - /home/a/docker-data/MCP/hf-mcp-sequential-thinking:/app
+      - hf-mcp-sequential-thinking:/app
+      # - /home/a/docker-data/MCP/hf-mcp-sequential-thinking:/app
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://0.0.0.0:8090/health-check || exit 1"]
@@ -19,3 +23,9 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
+
+volumes:
+  hf-mcp-sequential-thinking:
+
+networks:
+  hf-docker:
