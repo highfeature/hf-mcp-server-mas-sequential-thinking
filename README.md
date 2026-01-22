@@ -71,7 +71,7 @@ This parallel processing leads to substantially higher token usage (potentially 
     - Configure the desired provider using the `LLM_PROVIDER` environment variable (defaults to `deepseek`).
 - Exa API Key (required only if using the Researcher agent's capabilities)
     - Set via the `EXA_API_KEY` environment variable.
-- `uv` package manager (recommended) or `pip`.
+- `uv` package manager
 
 ## MCP Server Configuration (Client-Side)
 
@@ -102,14 +102,6 @@ The `env` section within your MCP client configuration should include the API ke
 ```
 
 ## Installation & Setup
-
-### Installing via Smithery
-TODO
-To install Sequential Thinking Multi-Agent System for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@FradSer/mcp-server-sequential-thinking):
-
-```bash
-npx -y @smithery/cli install @FradSer/mcp-server-sequential-thinking --client claude
-```
 
 ### Manual Installation
 1.  **Clone the repository:**
@@ -157,16 +149,15 @@ npx -y @smithery/cli install @FradSer/mcp-server-sequential-thinking --client cl
     **Note on Model Selection:**
     - The `TEAM_MODEL_ID` is used by the Coordinator (`Team` object). This role benefits from strong reasoning, synthesis, and delegation capabilities. Consider using a more powerful model (e.g., `deepseek-chat`, `claude-3-opus`, `gpt-4-turbo`) here, potentially balancing capability with cost/speed.
     - The `AGENT_MODEL_ID` is used by the specialist agents (Planner, Researcher, etc.). These handle focused sub-tasks. A faster or more cost-effective model (e.g., `deepseek-chat`, `claude-3-sonnet`, `llama3-8b`) might be suitable, depending on task complexity and budget/performance needs.
-    - Defaults are provided in the code (e.g., in `main.py`) if these environment variables are not set. Experimentation is encouraged to find the optimal balance for your use case.
 
 3.  **Install Dependencies:**
     It's highly recommended to use a virtual environment.
 
-    - **Using `uv` (Recommended):**
+    - **Using `uv`:**
         ```bash
         # Install uv if you don't have it:
-        # curl -LsSf https://astral.sh/uv/install.sh | sh
-        # source $HOME/.cargo/env # Or restart your shell
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        export PATH="/root/.local/bin:$PATH"
 
         # Create and activate a virtual environment (optional but recommended)
         uv venv --python 3.13
@@ -175,17 +166,6 @@ npx -y @smithery/cli install @FradSer/mcp-server-sequential-thinking --client cl
         # Install dependencies
         uv sync
         ```
-    - **Using `pip`:**
-        ```bash
-        # Create and activate a virtual environment (optional but recommended)
-        python -m venv .venv
-        source .venv/bin/activate # On Windows use `.venv\\Scripts\\activate`
-
-        # Install dependencies
-        pip install -r requirements.txt
-        # Or if a pyproject.toml exists with dependencies defined:
-        # pip install .
-        ```
 
 ## Usage
 
@@ -193,20 +173,9 @@ Ensure your environment variables are set and the virtual environment (if used) 
 
 Run the server. Choose one of the following methods:
 
-1.  **Using `uv run` (Recommended):**
+1.  **Using `uv run`:**
     ```bash
     export PYTHONPATH=.; uv run uvicorn src.main:app --reload --env-file .env --port=8090 --log-level debug
-    # Or (TODO: check if true after the major update)
-    uv --directory /path/to/mcp-server-sequential-thinking run mcp-server-sequential-thinking
-    # Or but need to uncomment the main function in main.py  (TODO: check if steel true)
-    uv --directory /home/a/repositories/ia/hf/hf-mcp-sequential-thinking run python src/main.py --transport http --port 19050
-    ```
-2.  **Directly using Python:**
-
-    ```bash
-    # Or but need to uncomment the main function in main.py  (TODO: check if true after the major update)
-    export PYTHONPATH=.
-    python src/main.py --transport http --port 8090
     ```
 
 The server will start and listen for requests via stdio or sse or http, making the `sequentialthinking` tool available to compatible MCP clients configured to use it.
@@ -283,14 +252,9 @@ The tool returns a JSON string containing:
     uv sync
     # or
     uv sync --group dev # Or install extras if defined in pyproject.toml
-
-    # Using pip
-    pip install -r requirements.txt
-    # Or install extras if defined in pyproject.toml: pip install -e ".[dev]"
-    pip install -r requirements-dev.txt 
-    ```
+   ```
 4.  **Run Checks:**
-    Execute linters, formatters, and tests (adjust commands based on your project setup).
+    Execute linters, formatters, and tests (adjust commands based on your project setup). Coverage actual: 70%
     ```bash
     # Example commands (replace with actual commands used in the project)
     ruff check . --fix
@@ -308,7 +272,7 @@ The tool returns a JSON string containing:
     ```
     For debug with MCP inspector
     ```bash
-        npx @modelcontextprotocol/inspector uv run scr/main.py
+    npx @modelcontextprotocol/inspector uv run scr/main.py
     ```
     Or for Debug:
     In VSCodium add in launch.json
@@ -346,9 +310,11 @@ The tool returns a JSON string containing:
     The model should return a response with a new thought, a new thought number, a new total thoughts, and Tool Result: Success. If you see this, your MCP server is working correctly.
 
 5.1 **Docker and Docker Compose, all with http-stream support for support kubernetes**
+
     ```sh
     docker build -t hf-mcp-sequential-thinking .
     ```
+
     Make sure you have a .env file in the root of your project with the necessary environment variables.
     ```.env
     EXA_API_KEY=your-exa-api-key # if you use EXA_API
@@ -367,23 +333,24 @@ The tool returns a JSON string containing:
     # OPENROUTER_TEAM_MODEL_ID=deepseek/deepseek-chat-v3-0324
     # OPENROUTER_AGENT_MODEL_ID=deepseek/deepseek-r1
     ```
+
     Then run the following command to test everything is fine
     ```sh
-    docker run -i --rm -v /home/a/docker-data/MCP/hf-mcp-sequential-thinking:/app -p 19110:8000 --env-file .env hf-mcp-sequential-thinking:latest
+    mkdir -p /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs
+    docker run -i --rm -v /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs:/app/logs -p 19110:8000 --env-file .env hf-mcp-sequential-thinking:latest
     ```
+
     Then
     ```sh
     docker compose up -d
     ```
+
     To run the project using Docker compose, follow these steps:
     ```sh
-    mkdir -p /home/a/docker-data/MCP/hf-mcp-sequential-thinking
-    ln -s /home/a/.sequential_thinking/logs /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs
-    cp pyproject.toml /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
-    cp -r src /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
-    cp .env /home/a/docker-data/MCP/hf-mcp-sequential-thinking/
+    mkdir -p /home/a/docker-data/MCP/hf-mcp-sequential-thinking/logs
     docker compose up -d --build
     ```
+    
     Now to check everything work fine
     In your browser open:
     ```browser
